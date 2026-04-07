@@ -630,6 +630,20 @@ const Admin = () => {
                     <label>URL VIDEO BANNER (CLOUDINARY)</label>
                     <input type="text" value={siteSettings.hero_video_url} onChange={e => setSiteSettings({...siteSettings, hero_video_url: e.target.value})} placeholder="URL de video .mp4" />
                   </div>
+                  <div className="filter-group" style={{ marginBottom: '16px' }}>
+                    <label>¿MODO NÍTIDO? (QUITA EL FILTRO OSCURO)</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={siteSettings.banner_video_subtle === 'false'} 
+                        onChange={(e) => setSiteSettings({...siteSettings, banner_video_subtle: e.target.checked ? 'false' : 'true'})}
+                        style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                      />
+                      <span style={{ fontSize: '0.8rem', color: siteSettings.banner_video_subtle === 'false' ? 'var(--primary)' : '#666' }}>
+                        {siteSettings.banner_video_subtle === 'false' ? 'NITIDEZ ACTIVADA' : 'FILTRO OSCURO ACTIVO'}
+                      </span>
+                    </div>
+                  </div>
                   <div className="filter-group">
                     <label>SUBTÍTULO</label>
                     <input type="text" value={siteSettings.hero_subtitle} onChange={e => setSiteSettings({...siteSettings, hero_subtitle: e.target.value})} />
