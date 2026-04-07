@@ -474,6 +474,15 @@ const Admin = () => {
                       <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.6rem' }}>VISTA PREVIA</div>
                     </div>
                   )}
+
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ width: '100%', marginTop: '24px', padding: '12px', fontSize: '0.9rem', justifyContent: 'center' }} 
+                    onClick={updateAllSettings} 
+                    disabled={loading}
+                  >
+                    {loading ? 'ACTUALIZANDO...' : 'ACTUALIZAR BANNER Y VIDEO'}
+                  </button>
                 </div>
 
                 {/* Contact Section */}
