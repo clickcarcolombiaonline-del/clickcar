@@ -28,25 +28,30 @@ const Venta = () => {
   }
 
   const uploadToSupabase = async (file, bucket = 'vehicles') => {
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`
-    const filePath = `${fileName}`
+    try {
+      const fileExt = file.name?.split('.')?.pop() || 'tmp'
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`
+      const filePath = `${fileName}`
 
-    const { error: uploadError, data } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type // IMPORTANTE: Identifica el tipo de archivo para el navegador
-      })
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type || 'video/mp4' // Asegura compatibilidad
+        })
 
-    if (uploadError) throw uploadError
+      if (uploadError) throw uploadError
 
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(filePath)
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(filePath)
 
-    return publicUrl
+      return publicUrl
+    } catch (err) {
+      console.error('Core upload error:', err)
+      return null
+    }
   }
 
   const handleFileChange = (e, type) => {

@@ -43,9 +43,13 @@ const VehicleDetail = ({ vehicle, onClose }) => {
                     autoPlay 
                     muted 
                     playsInline
+                    preload="auto"
                     className="gallery-main-video" 
                     style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'relative', zIndex: 1 }} 
-                  />
+                  >
+                    <source src={vehicle.video_url} type="video/mp4" />
+                    Tu navegador no soporta el reproductor de vídeo.
+                  </video>
                   <button 
                     className="btn btn-primary" 
                     style={{ position: 'absolute', bottom: '24px', left: '24px', zIndex: 10 }} 
