@@ -904,14 +904,18 @@ h1, h2, h3 {
   .hero-buttons {
     flex-direction: column;
     width: 100%;
-    max-width: 300px;
-    margin-top: 40px;
-    gap: 16px !important;
+    max-width: 340px; /* Un poco más de ancho para que el texto luzca */
+    margin-top: 50px;
+    gap: 20px !important;
   }
   .btn-hero {
     width: 100% !important;
-    padding: 18px !important;
-    font-size: 0.9rem !important;
+    padding: 24px !important;
+    font-size: 1.3rem !important; /* Texto MUCHO más grande */
+    font-weight: 900 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase;
+    justify-content: center !important;
   }
 
   /* Grids Adaptables */
