@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import ReactDOM from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Calendar, Gauge, Fuel, ChevronLeft, ChevronRight, PlayCircle } from 'lucide-react'
 
@@ -7,10 +8,10 @@ const VehicleDetail = ({ vehicle, onClose }) => {
   const [showVideo, setShowVideo] = useState(false)
 
   // BLOQUEO DE SCROLL AGRESIVO
-  React.useEffect(() => {
+  useEffect(() => {
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden'; // Doble bloqueo
+    document.documentElement.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = originalStyle;
       document.documentElement.style.overflow = 'auto';
@@ -22,7 +23,8 @@ const VehicleDetail = ({ vehicle, onClose }) => {
   const nextImage = () => setCurrentImage((currentImage + 1) % vehicle.photos_urls.length)
   const prevImage = () => setCurrentImage((currentImage - 1 + vehicle.photos_urls.length) % vehicle.photos_urls.length)
 
-  return (
+  // PORTAL PARA EVITAR CONFLICTOS DE CSS (LA SOLUCIÓN DEFINITIVA)
+  return ReactDOM.createPortal(
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -34,7 +36,7 @@ const VehicleDetail = ({ vehicle, onClose }) => {
         initial={{ scale: 0.9, y: 50 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 50 }}
-        className="modal-content glass"
+        className="modal-content"
         onClick={e => e.stopPropagation()}
       >
         <button className="modal-close" onClick={onClose}><X size={24} /></button>
@@ -148,7 +150,8 @@ const VehicleDetail = ({ vehicle, onClose }) => {
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   )
 }
 
