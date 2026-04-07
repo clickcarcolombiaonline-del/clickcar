@@ -306,6 +306,10 @@ const Admin = () => {
         .insert([
           { 
             ...newVehicle,
+            year: parseInt(newVehicle.year) || new Date().getFullYear(),
+            price: parseInt(newVehicle.price) || 0,
+            mileage: parseInt(newVehicle.mileage) || 0,
+            user_id: session?.user?.id,
             approved_status: true,
             photos_urls: photoUrls.length > 0 ? photoUrls : ['https://images.unsplash.com/photo-1614162692292-7ac56d777ac1?auto=format&fit=crop&q=80&w=800'],
             video_url: videoUrl || ''
