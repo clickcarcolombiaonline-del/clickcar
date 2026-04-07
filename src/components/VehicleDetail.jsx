@@ -6,6 +6,14 @@ const VehicleDetail = ({ vehicle, onClose }) => {
   const [currentImage, setCurrentImage] = useState(0)
   const [showVideo, setShowVideo] = useState(false)
 
+  // BLOQUEO DE SCROLL EN EL FONDO
+  React.useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   if (!vehicle) return null
 
   const nextImage = () => setCurrentImage((currentImage + 1) % vehicle.photos_urls.length)
