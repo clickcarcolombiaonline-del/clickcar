@@ -101,22 +101,39 @@ const Venta = () => {
     setError(null)
     
     try {
-      // 1. Create or get Profile
-      const { data: { user } } = await supabase.auth.getUser()
-      const profileId = user?.id || crypto.randomUUID()
-
-      const { data: profile, error: profileError } = await supabase
+      // 1. Obtener o Crear Perfil (Seguro para evitar conflictos de ID)
+      let profile;
+      const { data: existingProfile } = await supabase
         .from('profiles')
-        .upsert({ 
-          id: profileId, 
-          full_name: formData.name, 
-          phone: formData.phone, 
-          email: formData.email 
-        }, { onConflict: 'email' })
-        .select()
-        .single()
+        .select('*')
+        .eq('email', formData.email)
+        .single();
 
-      if (profileError) throw profileError
+      if (existingProfile) {
+        profile = existingProfile;
+        // Opcionalmente actualizar teléfono/nombre si cambiaron
+        await supabase
+          .from('profiles')
+          .update({ 
+            full_name: formData.name || formData.sellerName, 
+            phone: formData.phone 
+          })
+          .eq('id', profile.id);
+      } else {
+        const { data: newProfile, error: profileErr } = await supabase
+          .from('profiles')
+          .insert([{
+            id: crypto.randomUUID(),
+            full_name: formData.name || formData.sellerName,
+            email: formData.email,
+            phone: formData.phone
+          }])
+          .select()
+          .single();
+        
+        if (profileErr) throw profileErr;
+        profile = newProfile;
+      }
 
       // 1.5 Upload Files
       const photoUrls = []
