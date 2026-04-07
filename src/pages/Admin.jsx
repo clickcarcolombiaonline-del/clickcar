@@ -429,6 +429,28 @@ const Admin = () => {
                <div key={i} style={{ fontSize: '0.6rem', color: '#00ff00', fontFamily: 'monospace' }}>{log}</div>
              ))}
           </div>
+
+          <button 
+            onClick={() => {
+              localStorage.clear();
+              sessionStorage.clear();
+              supabase.auth.signOut();
+              window.location.reload();
+            }} 
+            style={{ 
+              marginTop: '15px', 
+              width: '100%', 
+              background: 'none', 
+              border: '1px solid rgba(255,255,255,0.1)', 
+              color: 'var(--text-secondary)', 
+              padding: '10px', 
+              borderRadius: '8px', 
+              fontSize: '0.7rem', 
+              cursor: 'pointer' 
+            }}
+          >
+            🧹 LIMPIEZA DE EMERGENCIA (BORRAR CACHÉ)
+          </button>
         </div>
       </div>
     )
