@@ -55,16 +55,17 @@ const CarShape = ({ className, label, color, delay = 0 }) => {
 
         {/* Floating Label */}
         <text 
-          x="300" y="160" 
+          x="300" y="165" 
           textAnchor="middle" 
           className="car-label-svg" 
           style={{ 
-            fontSize: '42px', 
+            fontSize: '85px', /* Aumento MASIVO de 42px a 85px */
             fontWeight: '900', 
-            letterSpacing: '0.4em', 
+            letterSpacing: '0.1em', 
             fill: '#fff', 
-            filter: `drop-shadow(0 0 15px ${color})`,
-            textTransform: 'uppercase'
+            filter: `drop-shadow(0 0 25px ${color})`,
+            textTransform: 'uppercase',
+            fontFamily: 'Inter, sans-serif'
           }}
         >
           {label}
