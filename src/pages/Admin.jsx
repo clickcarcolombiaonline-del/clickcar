@@ -298,34 +298,43 @@ const Admin = () => {
 
       let videoUrl = ''
       if (uploadFiles.video) {
-        videoUrl = await uploadToSupabase(uploadFiles.video)
+        videoUrl = await uploadToSupabase(uploadFiles.video) || ''
+      }
+
+      // LIMPIEZA AGRESIVA DE DATOS PARA SUPABASE
+      const vehicleData = {
+        make: newVehicle.make || 'Sin Marca',
+        model: newVehicle.model || 'Sin Modelo',
+        year: parseInt(newVehicle.year) || new Date().getFullYear(),
+        price: parseInt(String(newVehicle.price).replace(/\D/g, '')) || 0,
+        mileage: parseInt(String(newVehicle.mileage).replace(/\D/g, '')) || 0,
+        fuel_type: newVehicle.fuel_type || 'Gasolina',
+        transmission: newVehicle.transmission || 'Automática',
+        condition: newVehicle.condition || 'Excelente',
+        description: newVehicle.description || 'Sin descripción',
+        user_id: session?.user?.id,
+        approved_status: true,
+        photos_urls: photoUrls.length > 0 ? photoUrls : ['https://images.unsplash.com/photo-1614162692292-7ac56d777ac1?auto=format&fit=crop&q=80&w=800'],
+        video_url: videoUrl
       }
 
       const { data, error } = await supabase
         .from('vehicles')
-        .insert([
-          { 
-            ...newVehicle,
-            year: parseInt(newVehicle.year) || new Date().getFullYear(),
-            price: parseInt(newVehicle.price) || 0,
-            mileage: parseInt(newVehicle.mileage) || 0,
-            user_id: session?.user?.id,
-            approved_status: true,
-            photos_urls: photoUrls.length > 0 ? photoUrls : ['https://images.unsplash.com/photo-1614162692292-7ac56d777ac1?auto=format&fit=crop&q=80&w=800'],
-            video_url: videoUrl || ''
-          }
-        ])
+        .insert([vehicleData])
 
       if (error) throw error
       
       alert('¡Vehículo publicado instantáneamente!')
       setNewVehicle({
-        make: '', model: '', year: 2024, price: '', mileage: '', fuel_type: 'Gasolina', transmission: 'Automática', description: '', condition: 'Excelente'
+        make: '', model: '', year: 2024, price: '', mileage: 0, fuel_type: 'Gasolina', transmission: 'Automática', description: '', condition: 'Excelente'
       })
       setUploadFiles({ images: [], video: null })
       setPreviews({ images: [], video: null })
     } catch (err) {
-      alert('Error: ' + err.message)
+      console.error('Submission error:', err)
+      alert('Error al publicar: ' + (err.message || 'Verifica que todos los campos sean números válidos'))
+    } finally {
+      setLoading(false)
     }
     setLoading(false)
   }
