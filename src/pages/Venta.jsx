@@ -34,7 +34,11 @@ const Venta = () => {
 
     const { error: uploadError, data } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type // IMPORTANTE: Identifica el tipo de archivo para el navegador
+      })
 
     if (uploadError) throw uploadError
 

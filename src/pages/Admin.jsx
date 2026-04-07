@@ -153,7 +153,11 @@ const Admin = () => {
     try {
       const { error: uploadError } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type // Asegura que el navegador sepa que es un Video
+        })
 
       if (uploadError) throw uploadError
 
