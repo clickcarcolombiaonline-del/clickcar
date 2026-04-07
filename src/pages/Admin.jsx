@@ -17,6 +17,12 @@ const Admin = () => {
   const [newBrandName, setNewBrandName] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
   const [verifying, setVerifying] = useState(true)
+  const [authLog, setAuthLog] = useState([])
+
+  const addToLog = (msg) => {
+    console.log(`[AUTH_LOG]: ${msg}`)
+    setAuthLog(prev => [...prev.slice(-3), `${new Date().toLocaleTimeString()}: ${msg}`])
+  }
 
   const [newVehicle, setNewVehicle] = useState({
     make: '',
@@ -55,6 +61,7 @@ const Admin = () => {
   // SEGURIDAD: Función de verificación de rango
   const checkAdminRole = async (userId) => {
     if (!userId) {
+      addToLog("Sin ID de usuario.")
       setIsAdmin(false)
       setVerifying(false)
       return
@@ -62,60 +69,56 @@ const Admin = () => {
     
     setVerifying(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const currentEmail = user?.email || ''
+    const emailToVerify = user?.email || ''
+    addToLog(`Admin? -> ${emailToVerify}`)
 
-    console.log('--- DIAGNÓSTICO DE ACCESO CLICKCAR ---')
-    console.log('Usuario:', currentEmail)
-    console.log('ID:', userId)
-
-    // 1. BYPASS MAESTRO PARA EL PROPIETARIO
-    if (currentEmail === 'echeverryhernan@gmail.com') {
-      console.log('Acceso concedido vía Super-Bypass Propietario')
+    if (emailToVerify.toLowerCase().includes('echeverryhernan@gmail.com')) {
+      addToLog("SuperAdmin RECONOCIDO.")
       setIsAdmin(true)
       setVerifying(false)
       return
     }
 
-    // 2. VERIFICACIÓN EN BASE DE DATOS PARA OTROS
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', userId)
-        .single()
-      
+      const { data } = await supabase.from('profiles').select('is_admin').eq('id', userId).single()
       if (data?.is_admin) {
         setIsAdmin(true)
+        addToLog("Admin DB RECONOCIDO.")
       } else {
-        console.warn('Acceso denegado: El perfil no tiene flag de admin en la DB.')
         setIsAdmin(false)
-        if (userId) {
-          alert(`ACCESO RESTRINGIDO\nCorreo: ${currentEmail}\n\nSi eres el dueño del sistema, asegúrate de estar usando el correo echeverryhernan@gmail.com`)
-          // Eliminamos el signOut automático aquí para evitar bucles
-        }
+        addToLog("Permisos denegados.")
       }
     } catch (e) {
-      console.error('Error verificando roles:', e)
       setIsAdmin(false)
+      addToLog("Error verificación.")
     } finally {
       setVerifying(false)
     }
   }
 
-  // GESTIÓN DE SESIÓN ÚNICA
   useEffect(() => {
+    addToLog("Arrancando Monitor...")
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      if (session) checkAdminRole(session.user.id)
-      else setVerifying(false)
+      if (session) {
+        setSession(session)
+        addToLog(`Sesión: ${session.user.email}`)
+        checkAdminRole(session.user.id)
+      } else {
+        setVerifying(false)
+      }
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      if (session) checkAdminRole(session.user.id)
-      else {
-        setIsAdmin(false)
-        setVerifying(false)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      addToLog(`Evento: ${event}`)
+      if (session) {
+        setSession(session)
+        checkAdminRole(session.user.id)
+      } else {
+        if (event === 'SIGNED_OUT') {
+          setIsAdmin(false)
+          setSession(null)
+          setVerifying(false)
+        }
       }
     })
 
@@ -163,10 +166,12 @@ const Admin = () => {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    addToLog("Intentando login...")
     
     // Diagnóstico previo
     if (!import.meta.env.VITE_SUPABASE_URL) {
-      alert('ERROR CRÍTICO: No se han configurado las llaves de Supabase en el servidor.')
+      addToLog("ERROR: Faltan llaves Supabase.")
+      setError('Faltan llaves de servidor.')
       setLoading(false)
       return
     }
@@ -177,9 +182,11 @@ const Admin = () => {
     })
     
     if (error) {
-      setError('Credenciales inválidas o error de conexión.')
+      addToLog(`Error Login: ${error.message}`)
+      setError('Credenciales inválidas.')
       setLoading(false)
     } else {
+      addToLog("Login exitoso. Esperando sesión...")
       setLoading(false)
     }
   }
@@ -414,6 +421,14 @@ const Admin = () => {
               </button>
             </div>
           )}
+
+          {/* LOG DE DIAGNÓSTICO (Para Vercel) */}
+          <div style={{ marginTop: '20px', padding: '10px', background: 'black', borderRadius: '8px', border: '1px solid #333' }}>
+             <p style={{ fontSize: '0.6rem', color: '#666', marginBottom: '5px' }}>ESTADO DE CONEXIÓN:</p>
+             {authLog.map((log, i) => (
+               <div key={i} style={{ fontSize: '0.6rem', color: '#00ff00', fontFamily: 'monospace' }}>{log}</div>
+             ))}
+          </div>
         </div>
       </div>
     )
