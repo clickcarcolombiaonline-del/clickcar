@@ -6,11 +6,14 @@ const VehicleDetail = ({ vehicle, onClose }) => {
   const [currentImage, setCurrentImage] = useState(0)
   const [showVideo, setShowVideo] = useState(false)
 
-  // BLOQUEO DE SCROLL EN EL FONDO
+  // BLOQUEO DE SCROLL AGRESIVO
   React.useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden'; // Doble bloqueo
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = originalStyle;
+      document.documentElement.style.overflow = 'auto';
     };
   }, []);
 
