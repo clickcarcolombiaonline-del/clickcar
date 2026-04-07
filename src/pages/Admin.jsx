@@ -192,7 +192,16 @@ const Admin = () => {
 
   const checkAdminRole = async (userId) => {
     setVerifying(true)
-    const { data, error } = await supabase
+    
+    // 1. ACCESO PRIVILEGIADO PARA EL PROPIETARIO (Fail-safe)
+    if (session?.user?.email === 'echeverryhernan@gmail.com') {
+      setIsAdmin(true)
+      setVerifying(false)
+      return
+    }
+
+    // 2. VERIFICACIÓN EN BASE DE DATOS PARA OTROS ADMINS
+    const { data } = await supabase
       .from('profiles')
       .select('is_admin')
       .eq('id', userId)
@@ -202,7 +211,10 @@ const Admin = () => {
       setIsAdmin(true)
     } else {
       setIsAdmin(false)
-      if (userId) supabase.auth.signOut()
+      if (userId) {
+        alert('Acceso denegado: No tienes permisos de administrador.')
+        supabase.auth.signOut()
+      }
     }
     setVerifying(false)
   }
@@ -223,6 +235,91 @@ const Admin = () => {
     await supabase.auth.signOut()
     setSession(null)
     setIsAdmin(false)
+  }
+
+  const approveListing = async (id) => {
+    setLoading(true)
+    const { error } = await supabase
+      .from('vehicles')
+      .update({ approved_status: true })
+      .eq('id', id)
+    
+    if (error) {
+      alert('Error: ' + error.message)
+    } else {
+      setRefreshTrigger(prev => prev + 1)
+      alert('Vehículo verificado y publicado.')
+    }
+    setLoading(false)
+  }
+
+  const deleteListing = async (id) => {
+    if (!confirm('¿Estás seguro de eliminar esta publicación?')) return
+    setLoading(true)
+    const { error } = await supabase.from('vehicles').delete().eq('id', id)
+    if (error) alert('Error: ' + error.message)
+    else setRefreshTrigger(prev => prev + 1)
+    setLoading(false)
+  }
+
+  const handleFileChange = (e, type) => {
+    const files = e.target.files
+    if (type === 'images') {
+      const fileArr = Array.from(files)
+      setUploadFiles(prev => ({ ...prev, images: [...prev.images, ...fileArr] }))
+      
+      const newPreviews = fileArr.map(file => URL.createObjectURL(file))
+      setPreviews(prev => ({ ...prev, images: [...prev.images, ...newPreviews] }))
+    } else if (type === 'video') {
+      const file = files[0]
+      setUploadFiles(prev => ({ ...prev, video: file }))
+      setPreviews(prev => ({ ...prev, video: URL.createObjectURL(file) }))
+    }
+  }
+
+  const handleCreateInstant = async () => {
+    if (!newVehicle.make || !newVehicle.model || !newVehicle.price) {
+      alert('Por favor completa los campos básicos (Marca, Modelo, Precio)')
+      return
+    }
+
+    setLoading(true)
+    
+    try {
+      const photoUrls = []
+      for (const file of uploadFiles.images) {
+        const url = await uploadToSupabase(file)
+        if (url) photoUrls.push(url)
+      }
+
+      let videoUrl = ''
+      if (uploadFiles.video) {
+        videoUrl = await uploadToSupabase(uploadFiles.video)
+      }
+
+      const { data, error } = await supabase
+        .from('vehicles')
+        .insert([
+          { 
+            ...newVehicle,
+            approved_status: true,
+            photos_urls: photoUrls.length > 0 ? photoUrls : ['https://images.unsplash.com/photo-1614162692292-7ac56d777ac1?auto=format&fit=crop&q=80&w=800'],
+            video_url: videoUrl || ''
+          }
+        ])
+
+      if (error) throw error
+      
+      alert('¡Vehículo publicado instantáneamente!')
+      setNewVehicle({
+        make: '', model: '', year: 2024, price: '', mileage: '', fuel_type: 'Gasolina', transmission: 'Automática', description: '', condition: 'Excelente'
+      })
+      setUploadFiles({ images: [], video: null })
+      setPreviews({ images: [], video: null })
+    } catch (err) {
+      alert('Error: ' + err.message)
+    }
+    setLoading(false)
   }
 
   if (verifying) {
