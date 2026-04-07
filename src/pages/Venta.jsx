@@ -27,29 +27,22 @@ const Venta = () => {
     }
   }
 
-  const uploadToSupabase = async (file, bucket = 'vehicles') => {
+  const uploadToCloudinary = async (file) => {
     try {
-      const fileExt = file.name?.split('.')?.pop() || 'tmp'
-      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`
-      const filePath = `${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type || 'video/mp4' // Asegura compatibilidad
-        })
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath)
-
-      return publicUrl
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET)
+      
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/auto/upload`, {
+        method: 'POST',
+        body: formData
+      })
+      
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error?.message || 'Error en Cloudinary')
+      return data.secure_url
     } catch (err) {
-      console.error('Core upload error:', err)
+      console.error('Cloudinary update error:', err)
       return null
     }
   }
@@ -144,16 +137,16 @@ const Venta = () => {
         profile = newProfile;
       }
 
-      // 1.5 Upload Files
+      // 1.5 Upload Files to Cloudinary
       const photoUrls = []
       for (const file of uploadFiles.images) {
-        const url = await uploadToSupabase(file)
-        photoUrls.push(url)
+        const url = await uploadToCloudinary(file)
+        if (url) photoUrls.push(url)
       }
 
       let videoUrl = ''
       if (uploadFiles.video) {
-        videoUrl = await uploadToSupabase(uploadFiles.video)
+        videoUrl = await uploadToCloudinary(uploadFiles.video) || ''
       }
 
       // 2. Insert Vehicle listing

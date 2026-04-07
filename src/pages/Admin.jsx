@@ -144,30 +144,23 @@ const Admin = () => {
     setLoading(false)
   }
 
-  const uploadToSupabase = async (file, bucket = 'vehicles') => {
+  const uploadToCloudinary = async (file) => {
     if (!file) return null
-    const fileExt = file.name?.split('.')?.pop() || 'tmp'
-    const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`
-    const filePath = `${fileName}`
-
     try {
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type // Asegura que el navegador sepa que es un Video
-        })
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath)
-
-      return publicUrl
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET)
+      
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/auto/upload`, {
+        method: 'POST',
+        body: formData
+      })
+      
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error?.message || 'Error en Cloudinary')
+      return data.secure_url
     } catch (err) {
-      console.error('Upload error:', err)
+      console.error('Admin upload error:', err)
       return null
     }
   }
@@ -292,13 +285,13 @@ const Admin = () => {
     try {
       const photoUrls = []
       for (const file of uploadFiles.images) {
-        const url = await uploadToSupabase(file)
+        const url = await uploadToCloudinary(file)
         if (url) photoUrls.push(url)
       }
 
       let videoUrl = ''
       if (uploadFiles.video) {
-        videoUrl = await uploadToSupabase(uploadFiles.video) || ''
+        videoUrl = await uploadToCloudinary(uploadFiles.video) || ''
       }
 
       // LIMPIEZA AGRESIVA DE DATOS PARA SUPABASE
