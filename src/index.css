@@ -870,3 +870,100 @@ h1, h2, h3 {
   gap: 16px;
   margin-top: auto;
 }
+
+/* SYSTEM MOBILE RESPONSIVE PREMIUM */
+@media (max-width: 768px) {
+  :root {
+    --container-padding: 16px;
+  }
+
+  h1 { font-size: 2rem !important; line-height: 1.1 !important; }
+  h2 { font-size: 1.6rem !important; }
+  
+  .container {
+    padding: 0 var(--container-padding) !important;
+  }
+
+  /* Ajuste de Navegación */
+  .sticky-nav {
+    height: 70px;
+  }
+  .nav-links {
+    display: none; /* Ocultamos menús complejos en móvil por ahora */
+  }
+
+  /* Hero Section Mobile */
+  .hero-section {
+    padding-top: 60px;
+    height: auto;
+    min-height: 100vh;
+  }
+  .hero-title {
+    font-size: 2.5rem !important;
+  }
+  .hero-buttons {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 40px;
+    gap: 16px !important;
+  }
+  .btn-hero {
+    width: 100% !important;
+    padding: 18px !important;
+    font-size: 0.9rem !important;
+  }
+
+  /* Grids Adaptables */
+  div[style*="gridTemplateColumns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  /* Formularios de Venta Premium */
+  .glass {
+    padding: 24px !important;
+    border-radius: 24px !important;
+  }
+  
+  input, select, textarea {
+    font-size: 16px !important; /* Evita zoom automático en iPhone */
+    padding: 14px !important;
+  }
+
+  /* Catálogo y Modales */
+  .modal-content {
+    flex-direction: column !important;
+    width: 95% !important;
+    height: 90vh !important;
+    overflow-y: auto !important;
+  }
+  .modal-image {
+    width: 100% !important;
+    height: 250px !important;
+  }
+  .modal-info {
+    padding: 24px !important;
+  }
+  .specs-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .modal-title {
+    font-size: 1.8rem !important;
+  }
+
+  /* Admin Dashboard Mobile */
+  .admin-sidebar {
+    position: static !important;
+    width: 100% !important;
+    margin-bottom: 24px;
+  }
+}
+
+/* TOUCH TARGETS (Optimización para dedos) */
+@media (pointer: coarse) {
+  .btn, button, input, select {
+    min-height: 48px;
+  }
+}
+
