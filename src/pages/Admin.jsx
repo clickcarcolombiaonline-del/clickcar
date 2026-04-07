@@ -431,17 +431,20 @@ const Admin = () => {
                       )}
 
                        {listing.video_url && (
-                        <div className="glass" style={{ width: '100%', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--secondary-glow)' }}>
+                        <div className="glass" style={{ width: '100%', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--secondary-glow)', position: 'relative' }}>
+                           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'white', opacity: 0.3, fontSize: '0.6rem' }}>
+                             CARGANDO...
+                           </div>
                            <video 
-                             src={listing.video_url} 
+                             src={`${listing.video_url}?t=${Date.now()}`} 
                              controls 
                              muted
                              autoPlay
                              playsInline
                              loop
-                             style={{ width: '100%', height: '140px', objectFit: 'cover', background: '#000' }} 
+                             style={{ width: '100%', height: '140px', objectFit: 'cover', background: '#000', position: 'relative', zIndex: 1 }} 
                            />
-                           <div style={{ fontSize: '0.65rem', textAlign: 'center', padding: '6px', background: 'var(--secondary)', color: 'black', fontWeight: '800', letterSpacing: '0.1em' }}>
+                           <div style={{ fontSize: '0.65rem', textAlign: 'center', padding: '6px', background: 'var(--secondary)', color: 'black', fontWeight: '800', letterSpacing: '0.1em', position: 'relative', zIndex: 2 }}>
                              REVISIÓN DE VIDEO TOUR
                            </div>
                         </div>

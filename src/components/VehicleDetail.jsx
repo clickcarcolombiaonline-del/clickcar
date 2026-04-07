@@ -33,19 +33,22 @@ const VehicleDetail = ({ vehicle, onClose }) => {
           <div className="modal-gallery">
             <div className="main-media">
               {showVideo && vehicle.video_url ? (
-                <div style={{ width: '100%', height: '100%', background: '#000', borderRadius: '24px', overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: '100%', background: '#000', borderRadius: '24px', overflow: 'hidden', position: 'relative' }}>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'var(--primary)', opacity: 0.5, fontSize: '0.8rem' }}>
+                    CARGANDO VÍDEO TOUR...
+                  </div>
                   <video 
-                    src={vehicle.video_url} 
+                    src={vehicle.video_url.includes('?') ? vehicle.video_url : `${vehicle.video_url}?t=${Date.now()}`} 
                     controls 
                     autoPlay 
                     muted 
                     playsInline
                     className="gallery-main-video" 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000' }} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'relative', zIndex: 1 }} 
                   />
                   <button 
                     className="btn btn-primary" 
-                    style={{ position: 'absolute', bottom: '24px', left: '24px', zIndex: 10, boxShadow: '0 0 20px rgba(0,0,0,0.5)' }} 
+                    style={{ position: 'absolute', bottom: '24px', left: '24px', zIndex: 10 }} 
                     onClick={() => setShowVideo(false)}
                   >
                     REGRESAR A FOTOS
