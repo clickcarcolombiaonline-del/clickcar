@@ -146,21 +146,33 @@ const Admin = () => {
 
   const uploadToCloudinary = async (file) => {
     if (!file) return null
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+    const preset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+
+    if (!cloudName || !preset) {
+      alert('¡ATENCIÓN! Faltan las llaves de Cloudinary en el sistema. Revisa el archivo .env o las variables en Vercel.')
+      return null
+    }
+
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('upload_preset', import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET)
+      formData.append('upload_preset', preset)
       
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/auto/upload`, {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
         method: 'POST',
         body: formData
       })
       
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error?.message || 'Error en Cloudinary')
+      if (!res.ok) {
+        console.error('Full Cloudinary error:', data)
+        throw new Error(data.error?.message || 'Error desconocido en Cloudinary')
+      }
       return data.secure_url
     } catch (err) {
       console.error('Admin upload error:', err)
+      alert(`ERROR DE SUBIDA: ${err.message}\n(Asegúrate de haber reiniciado tu terminal si cambiaste el .env)`)
       return null
     }
   }
@@ -187,15 +199,18 @@ const Admin = () => {
     return () => subscription.unsubscribe()
   }, [])
 
-  const checkAdminRole = async (userId) => {
-    setVerifying(true)
-    
-    // 1. ACCESO PRIVILEGIADO PARA EL PROPIETARIO (Fail-safe)
-    if (session?.user?.email === 'echeverryhernan@gmail.com') {
-      setIsAdmin(true)
-      setVerifying(false)
-      return
-    }
+    const checkAdminRole = async (userId) => {
+      setVerifying(true)
+      
+      // Obtener el usuario actual para verificar el email
+      const { data: { user } } = await supabase.auth.getUser()
+
+      // 1. ACCESO PRIVILEGIADO PARA EL PROPIETARIO (Fail-safe)
+      if (user?.email === 'echeverryhernan@gmail.com') {
+        setIsAdmin(true)
+        setVerifying(false)
+        return
+      }
 
     // 2. VERIFICACIÓN EN BASE DE DATOS PARA OTROS ADMINS
     const { data } = await supabase
@@ -280,8 +295,12 @@ const Admin = () => {
       return
     }
 
-    setLoading(true)
-    
+    if (!session?.user?.id) {
+      alert('Tu sesión ha expirado o no has iniciado sesión. Por favor, recarga la página e ingresa tus credenciales.')
+      setLoading(false)
+      return
+    }
+
     try {
       const photoUrls = []
       for (const file of uploadFiles.images) {
@@ -317,7 +336,9 @@ const Admin = () => {
 
       if (error) throw error
       
-      alert('¡Vehículo publicado instantáneamente!')
+      const debugMsg = videoUrl ? `\nVídeo guardado en: ${videoUrl.substring(0, 40)}...` : '\nSin vídeo'
+      alert('¡Vehículo publicado correctamente!' + debugMsg)
+      
       setNewVehicle({
         make: '', model: '', year: 2024, price: '', mileage: 0, fuel_type: 'Gasolina', transmission: 'Automática', description: '', condition: 'Excelente'
       })
@@ -325,11 +346,10 @@ const Admin = () => {
       setPreviews({ images: [], video: null })
     } catch (err) {
       console.error('Submission error:', err)
-      alert('Error al publicar: ' + (err.message || 'Verifica que todos los campos sean números válidos'))
+      alert('Error de conexión o de llaves: ' + (err.message || 'Verifica que Cloudinary esté bien configurado'))
     } finally {
       setLoading(false)
     }
-    setLoading(false)
   }
 
   if (verifying) {

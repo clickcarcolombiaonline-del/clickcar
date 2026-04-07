@@ -38,10 +38,8 @@ const VehicleDetail = ({ vehicle, onClose }) => {
                     CARGANDO VÍDEO TOUR...
                   </div>
                   <video 
-                    src={vehicle.video_url.includes('?') ? vehicle.video_url : `${vehicle.video_url}?t=${Date.now()}`} 
+                    src={vehicle.video_url.includes('cloudinary') ? vehicle.video_url : (vehicle.video_url.includes('?') ? vehicle.video_url : `${vehicle.video_url}?t=${Date.now()}`)} 
                     controls 
-                    autoPlay 
-                    muted 
                     playsInline
                     preload="auto"
                     className="gallery-main-video" 
@@ -50,6 +48,19 @@ const VehicleDetail = ({ vehicle, onClose }) => {
                     <source src={vehicle.video_url} type="video/mp4" />
                     Tu navegador no soporta el reproductor de vídeo.
                   </video>
+                  
+                  <div style={{ position: 'absolute', top: '24px', right: '24px', zIndex: 10, display: 'flex', gap: '8px' }}>
+                    <a 
+                      href={vehicle.video_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="btn btn-secondary"
+                      style={{ padding: '8px 16px', fontSize: '0.8rem', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)' }}
+                    >
+                      VER PANTALLA COMPLETA ↗
+                    </a>
+                  </div>
+
                   <button 
                     className="btn btn-primary" 
                     style={{ position: 'absolute', bottom: '24px', left: '24px', zIndex: 10 }} 
