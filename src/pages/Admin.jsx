@@ -330,6 +330,30 @@ const Admin = () => {
     setRefreshTrigger(p => p + 1)
   }
 
+  const updateAllSettings = async () => {
+    setLoading(true)
+    try {
+      const updates = Object.entries(siteSettings).map(([key, value]) => ({
+        key,
+        value: String(value)
+      }))
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('settings')
+          .upsert(update, { onConflict: 'key' })
+        if (error) throw error
+      }
+      
+      alert('¡Configuración actualizada con éxito!')
+      setRefreshTrigger(prev => prev + 1)
+    } catch (err) {
+      alert('Error actualizando: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (verifying) {
     return <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--primary)', fontWeight: 'bold' }}>VERIFICANDO ACCESO SEGURO...</div>
   }
@@ -437,23 +461,37 @@ const Admin = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {pendingListings.map(listing => (
                   <div key={listing.id} className="glass" style={{ padding: '24px', borderRadius: '20px', display: 'flex', gap: '24px' }}>
-                    <div style={{ width: '320px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <img src={listing.photos_urls?.[0]} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '16px' }} />
-                      {listing.video_url && <video src={listing.video_url} controls muted style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '16px' }} />}
+                    <div style={{ width: '320px', flexShrink: 0 }}>
+                      <div style={{ width: '100%', height: '180px', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '12px' }}>
+                        <img src={listing.photos_urls?.[0] || 'https://images.unsplash.com/photo-1614162692292-7ac56d777ac1?auto=format&fit=crop&q=80&w=800'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                      {listing.video_url && (
+                        <div style={{ borderRadius: '12px', overflow: 'hidden', background: '#000' }}>
+                          <video src={listing.video_url} controls muted style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
+                        </div>
+                      )}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <h4 style={{ fontSize: '1.4rem' }}>{listing.make} {listing.model}</h4>
-                        <span style={{ fontSize: '1.2rem', color: 'var(--primary)', fontWeight: 'bold' }}>${listing.price.toLocaleString()}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h4 style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>{listing.make} {listing.model} {listing.year}</h4>
+                          <p style={{ margin: '8px 0', opacity: 0.7, fontSize: '0.9rem' }}>Vendedor: {listing.profiles?.full_name || 'Desconocido'}</p>
+                        </div>
+                        <span style={{ fontSize: '1.4rem', color: 'var(--primary)', fontWeight: '900' }}>${(listing.price || 0).toLocaleString()}</span>
                       </div>
-                      <p style={{ margin: '10px 0', opacity: 0.7 }}>Usuario: {listing.profiles?.full_name || 'Desconocido'}</p>
-                      <div style={{ display: 'flex', gap: '12px' }}>
-                        <button className="btn btn-primary" onClick={() => approveListing(listing.id)}>APROBAR</button>
-                        <button className="btn glass" onClick={() => deleteListing(listing.id)} style={{ color: 'red' }}>RECHAZAR</button>
+                      <div style={{ display: 'flex', gap: '15px', color: 'var(--text-secondary)', fontSize: '0.8rem', margin: '15px 0' }}>
+                        <span>KM: {(listing.mileage || 0).toLocaleString()}</span>
+                        <span>Motor: {listing.fuel_type}</span>
+                        <span>Transmisión: {listing.transmission}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                        <button className="btn btn-primary" onClick={() => approveListing(listing.id)} style={{ padding: '8px 24px' }}>APROBAR</button>
+                        <button className="btn glass" onClick={() => deleteListing(listing.id)} style={{ color: '#ff4d4d', padding: '8px 24px' }}>RECHAZAR</button>
                       </div>
                     </div>
                   </div>
                 ))}
+                {pendingListings.length === 0 && <p style={{ opacity: 0.5, textAlign: 'center', padding: '40px' }}>No hay vehículos pendientes por aprobar.</p>}
               </div>
             </motion.div>
           )}
@@ -462,19 +500,136 @@ const Admin = () => {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <h2 style={{ fontSize: '2.5rem', marginBottom: '32px' }}>AÑADIR <span className="highlight">DIRECTO</span></h2>
               <div className="glass" style={{ padding: '32px', borderRadius: '20px' }}>
-                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-                    <div className="filter-group"><label>MARCA</label><input type="text" value={newVehicle.make} onChange={e => setNewVehicle({...newVehicle, make: e.target.value})} /></div>
-                    <div className="filter-group"><label>MODELO</label><input type="text" value={newVehicle.model} onChange={e => setNewVehicle({...newVehicle, model: e.target.value})} /></div>
-                    <div className="filter-group"><label>PRECIO</label><input type="number" value={newVehicle.price} onChange={e => setNewVehicle({...newVehicle, price: e.target.value})} /></div>
+                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+                    <div className="filter-group">
+                      <label>MARCA</label>
+                      <select value={newVehicle.make} onChange={e => setNewVehicle({...newVehicle, make: e.target.value})} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '10px', width: '100%' }}>
+                        <option value="" style={{ color: 'black' }}>Seleccionar Marca</option>
+                        {brands.map(b => <option key={b.id} value={b.name} style={{ color: 'black' }}>{b.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="filter-group"><label>MODELO</label><input type="text" value={newVehicle.model} onChange={e => setNewVehicle({...newVehicle, model: e.target.value})} placeholder="Ej. Corvette C8" /></div>
+                    <div className="filter-group"><label>AÑO</label><input type="number" value={newVehicle.year} onChange={e => setNewVehicle({...newVehicle, year: e.target.value})} /></div>
+                    <div className="filter-group"><label>PRECIO ($)</label><input type="number" value={newVehicle.price} onChange={e => setNewVehicle({...newVehicle, price: e.target.value})} /></div>
+                    <div className="filter-group"><label>KILOMETRAJE</label><input type="number" value={newVehicle.mileage} onChange={e => setNewVehicle({...newVehicle, mileage: e.target.value})} /></div>
                  </div>
-                 <div style={{ marginTop: '24px', display: 'flex', gap: '24px' }}>
-                    <label className="btn glass"><ImageIcon size={18}/> FOTOS<input type="file" multiple hidden onChange={e => handleFileChange(e, 'images')} /></label>
-                    <label className="btn glass"><Video size={18}/> VIDEO TOUR<input type="file" hidden onChange={e => handleFileChange(e, 'video')} /></label>
+                 
+                 <div className="filter-group" style={{ marginTop: '24px' }}>
+                   <label>DESCRIPCIÓN (VOZ DISPONIBLE)</label>
+                   <div style={{ position: 'relative' }}>
+                    <textarea value={newVehicle.description} onChange={e => setNewVehicle({...newVehicle, description: e.target.value})} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '10px', width: '100%', height: '100px', resize: 'none' }} />
+                    <button onClick={startVoiceCapture} style={{ position: 'absolute', right: '15px', bottom: '15px', background: 'none', border: 'none', color: isRecording ? 'red' : 'var(--primary)', cursor: 'pointer' }}>
+                      {isRecording ? <MicOff size={24} className="glow-red" /> : <Mic size={24} />}
+                    </button>
+                   </div>
                  </div>
-                 <button className="btn btn-secondary" style={{ width: '100%', marginTop: '32px', padding: '16px' }} onClick={handleCreateInstant} disabled={loading}>
-                   {loading ? 'SUBIENDO...' : 'PUBLICAR VEHÍCULO'}
+
+                 <div style={{ marginTop: '32px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                    <label className="btn glass" style={{ cursor: 'pointer' }}>
+                      <ImageIcon size={18}/> FOTOS ({uploadFiles.images.length})
+                      <input type="file" multiple hidden onChange={e => handleFileChange(e, 'images')} accept="image/*" />
+                    </label>
+                    <label className="btn glass" style={{ cursor: 'pointer', borderColor: uploadFiles.video ? 'var(--primary)' : '' }}>
+                      <Video size={18}/> {uploadFiles.video ? 'VIDEO SELECCIONADO' : 'CARGAR VIDEO TOUR'}
+                      <input type="file" hidden onChange={e => handleFileChange(e, 'video')} accept="video/*" />
+                    </label>
+                 </div>
+                 
+                 <button className="btn btn-primary" style={{ width: '100%', marginTop: '32px', padding: '16px', fontSize: '1.2rem', justifyContent: 'center' }} onClick={handleCreateInstant} disabled={loading}>
+                   {loading ? 'PROCESANDO SUBIDA...' : 'PUBLICAR EN CATÁLOGO'}
                  </button>
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'brands' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <h2 style={{ fontSize: '2.5rem', marginBottom: '32px' }}>GESTIÓN DE <span className="highlight">MARCAS</span></h2>
+              <div className="glass" style={{ padding: '32px', borderRadius: '20px', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                  <div className="filter-group" style={{ flex: 1, minWidth: '250px' }}>
+                    <label>NOMBRE DE LA MARCA</label>
+                    <input type="text" value={newBrandName} onChange={e => setNewBrandName(e.target.value)} placeholder="Ej. Ferrari, Lamborghini..." />
+                  </div>
+                  <button className="btn btn-primary" onClick={addBrand}>AÑADIR MARCA</button>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' }}>
+                {brands.map(brand => (
+                  <div key={brand.id} className="glass" style={{ padding: '16px 20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontWeight: '700', letterSpacing: '0.05em' }}>{brand.name}</span>
+                    <button onClick={() => deleteBrand(brand.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,0,0,0.4)', transition: '0.2s' }} onMouseEnter={e => e.currentTarget.style.color='red'} onMouseLeave={e => e.currentTarget.style.color='rgba(255,0,0,0.4)'}>
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'settings' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <h2 style={{ fontSize: '2.5rem', marginBottom: '32px' }}>CONFIGURACIÓN DEL <span className="highlight">SITIO</span></h2>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '32px', marginBottom: '40px' }}>
+                {/* Banner Principal */}
+                <div className="glass" style={{ padding: '32px', borderRadius: '24px' }}>
+                  <h3 style={{ color: 'var(--primary)', marginBottom: '24px', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '10px' }}><Settings size={20}/> BANNER CABECERA</h3>
+                  <div className="filter-group" style={{ marginBottom: '16px' }}>
+                    <label>TÍTULO DEL SITIO (LOGO)</label>
+                    <input type="text" value={siteSettings.site_name} onChange={e => setSiteSettings({...siteSettings, site_name: e.target.value})} />
+                  </div>
+                  <div className="filter-group" style={{ marginBottom: '16px' }}>
+                    <label>URL VIDEO BANNER (CLOUDINARY)</label>
+                    <input type="text" value={siteSettings.hero_video_url} onChange={e => setSiteSettings({...siteSettings, hero_video_url: e.target.value})} placeholder="URL de video .mp4" />
+                  </div>
+                  <div className="filter-group">
+                    <label>SUBTÍTULO</label>
+                    <input type="text" value={siteSettings.hero_subtitle} onChange={e => setSiteSettings({...siteSettings, hero_subtitle: e.target.value})} />
+                  </div>
+                </div>
+
+                {/* Contacto */}
+                <div className="glass" style={{ padding: '32px', borderRadius: '24px' }}>
+                  <h3 style={{ color: 'var(--secondary)', marginBottom: '24px', fontSize: '1.2rem' }}>DATOS DE CONTACTO</h3>
+                  <div className="filter-group" style={{ marginBottom: '16px' }}>
+                    <label>TELÉFONO WHATSAPP</label>
+                    <input type="text" value={siteSettings.contact_phone} onChange={e => setSiteSettings({...siteSettings, contact_phone: e.target.value})} />
+                  </div>
+                  <div className="filter-group" style={{ marginBottom: '16px' }}>
+                    <label>CORREO DE CONTACTO</label>
+                    <input type="email" value={siteSettings.contact_email} onChange={e => setSiteSettings({...siteSettings, contact_email: e.target.value})} />
+                  </div>
+                  <div className="filter-group">
+                    <label>DIRECCIÓN FÍSICA</label>
+                    <input type="text" value={siteSettings.business_address} onChange={e => setSiteSettings({...siteSettings, business_address: e.target.value})} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Textos Legales */}
+              <div className="glass" style={{ padding: '32px', borderRadius: '24px', marginBottom: '32px' }}>
+                <h3 style={{ color: 'var(--tertiary)', marginBottom: '24px', fontSize: '1.2rem' }}>FOOTER Y LEGAL</h3>
+                <div className="filter-group" style={{ marginBottom: '24px' }}>
+                  <label>DESCRIPCIÓN BREVE (BAJO EL LOGO)</label>
+                  <textarea value={siteSettings.site_description} onChange={e => setSiteSettings({...siteSettings, site_description: e.target.value})} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '10px', width: '100%', height: '80px', resize: 'none' }} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                  <div className="filter-group">
+                    <label>POLÍTICA DE PRIVACIDAD</label>
+                    <textarea value={siteSettings.privacy_policy} onChange={e => setSiteSettings({...siteSettings, privacy_policy: e.target.value})} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '10px', width: '100%', height: '150px', resize: 'none' }} />
+                  </div>
+                  <div className="filter-group">
+                    <label>TÉRMINOS Y CONDICIONES</label>
+                    <textarea value={siteSettings.terms_conditions} onChange={e => setSiteSettings({...siteSettings, terms_conditions: e.target.value})} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '10px', width: '100%', height: '150px', resize: 'none' }} />
+                  </div>
+                </div>
+              </div>
+
+              <button className="btn btn-primary" style={{ width: '100%', padding: '20px', fontSize: '1.2rem', justifyContent: 'center' }} onClick={updateAllSettings} disabled={loading}>
+                {loading ? 'GUARDANDO CAMBIOS...' : 'GUARDAR CONFIGURACIÓN COMPLETA'}
+              </button>
             </motion.div>
           )}
         </div>
