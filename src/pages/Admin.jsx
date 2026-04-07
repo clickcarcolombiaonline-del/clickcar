@@ -18,6 +18,7 @@ const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false)
   const [verifying, setVerifying] = useState(true)
   const [authLog, setAuthLog] = useState([])
+  const [loginGracePeriod, setLoginGracePeriod] = useState(false)
 
   const addToLog = (msg) => {
     console.log(`[AUTH_LOG]: ${msg}`)
@@ -97,11 +98,10 @@ const Admin = () => {
   }
 
   useEffect(() => {
-    addToLog("Arrancando Monitor...")
+    addToLog("Monitor con Protección iniciado...")
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSession(session)
-        addToLog(`Sesión: ${session.user.email}`)
         checkAdminRole(session.user.id)
       } else {
         setVerifying(false)
@@ -112,18 +112,27 @@ const Admin = () => {
       addToLog(`Evento: ${event}`)
       if (session) {
         setSession(session)
+        if (event === 'SIGNED_IN') {
+           setLoginGracePeriod(true)
+           setTimeout(() => setLoginGracePeriod(false), 15000) // 15 Segundos de escudo
+        }
         checkAdminRole(session.user.id)
       } else {
+        // Bloqueio de expulsión
         if (event === 'SIGNED_OUT') {
-          setIsAdmin(false)
-          setSession(null)
-          setVerifying(false)
+           if (loginGracePeriod) {
+             addToLog("SIGNED_OUT Bloqueado (Escudo activo)")
+           } else {
+             setIsAdmin(false)
+             setSession(null)
+             setVerifying(false)
+           }
         }
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [loginGracePeriod])
 
   // CARGA DE DATOS BASADA EN TABS
   useEffect(() => {
