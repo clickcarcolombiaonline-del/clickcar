@@ -168,21 +168,53 @@ const Admin = () => {
     }
   }
 
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [verifying, setVerifying] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      if (session) checkAdminRole(session.user.id)
+      else setVerifying(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      if (session) checkAdminRole(session.user.id)
+      else {
+        setIsAdmin(false)
+        setVerifying(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const checkAdminRole = async (userId) => {
+    setVerifying(true)
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', userId)
+      .single()
+    
+    if (data?.is_admin) {
+      setIsAdmin(true)
+    } else {
+      setIsAdmin(false)
+      if (userId) supabase.auth.signOut()
+    }
+    setVerifying(false)
+  }
+
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     
-    // For demo purposes, we'll allow a mock login if Supabase is not connected
-    if (email === 'admin@clickcar.com' && password === 'admin123') {
-      setSession({ user: { email: 'admin@clickcar.com' } })
-      setLoading(false)
-      return
-    }
-
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      setError(error.message)
+      setError('Credenciales inválidas.')
       setLoading(false)
     }
   }
@@ -190,98 +222,24 @@ const Admin = () => {
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     setSession(null)
+    setIsAdmin(false)
   }
 
-  const approveListing = async (id) => {
-    setLoading(true)
-    const { error } = await supabase
-      .from('vehicles')
-      .update({ approved_status: true })
-      .eq('id', id)
-    
-    if (error) {
-      alert('Error: ' + error.message)
-    } else {
-      setRefreshTrigger(prev => prev + 1)
-      alert('Vehículo verificado y publicado.')
-    }
-    setLoading(false)
+  if (verifying) {
+    return <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--primary)' }}>VERIFICANDO ACCESO SEGURO...</div>
   }
 
-  const deleteListing = async (id) => {
-    if (!confirm('¿Estás seguro de eliminar esta publicación?')) return
-    setLoading(true)
-    const { error } = await supabase.from('vehicles').delete().eq('id', id)
-    if (error) alert('Error: ' + error.message)
-    else setRefreshTrigger(prev => prev + 1)
-    setLoading(false)
-  }
-
-  const handleFileChange = (e, type) => {
-    const files = e.target.files
-    if (type === 'images') {
-      const fileArr = Array.from(files)
-      setUploadFiles(prev => ({ ...prev, images: [...prev.images, ...fileArr] }))
-      
-      const newPreviews = fileArr.map(file => URL.createObjectURL(file))
-      setPreviews(prev => ({ ...prev, images: [...prev.images, ...newPreviews] }))
-    } else if (type === 'video') {
-      const file = files[0]
-      setUploadFiles(prev => ({ ...prev, video: file }))
-      setPreviews(prev => ({ ...prev, video: URL.createObjectURL(file) }))
-    }
-  }
-
-  const handleCreateInstant = async () => {
-    if (!newVehicle.make || !newVehicle.model || !newVehicle.price) {
-      alert('Por favor completa los campos básicos (Marca, Modelo, Precio)')
-      return
-    }
-
-    setLoading(true)
-    
-    try {
-      const photoUrls = []
-      for (const file of uploadFiles.images) {
-        const url = await uploadToSupabase(file)
-        if (url) photoUrls.push(url)
-      }
-
-      let videoUrl = ''
-      if (uploadFiles.video) {
-        videoUrl = await uploadToSupabase(uploadFiles.video)
-      }
-
-      const { data, error } = await supabase
-        .from('vehicles')
-        .insert([
-          { 
-            ...newVehicle,
-            approved_status: true,
-            photos_urls: photoUrls.length > 0 ? photoUrls : ['https://images.unsplash.com/photo-1614162692292-7ac56d777ac1?auto=format&fit=crop&q=80&w=800'],
-            video_url: videoUrl || ''
-          }
-        ])
-
-      if (error) throw error
-      
-      alert('¡Vehículo publicado instantáneamente!')
-      setNewVehicle({
-        make: '', model: '', year: 2024, price: '', mileage: '', fuel_type: 'Gasolina', transmission: 'Automática', description: '', condition: 'Excelente'
-      })
-      setUploadFiles({ images: [], video: null })
-      setPreviews({ images: [], video: null })
-    } catch (err) {
-      alert('Error: ' + err.message)
-    }
-    setLoading(false)
-  }
-
-  if (!session) {
+  if (!session || !isAdmin) {
     return (
       <div className="container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
         <div className="glass" style={{ width: '100%', maxWidth: '400px', padding: '40px', borderRadius: '24px' }}>
-          <h2 style={{ fontSize: '2rem', marginBottom: '32px', textAlign: 'center' }}>Super <span className="highlight">Admin</span></h2>
+          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--primary)', display: 'inline-flex', justifyContent: 'center', alignItems: 'center', marginBottom: '16px' }}>
+              <LayoutDashboard color="black" size={32} />
+            </div>
+            <h2 style={{ fontSize: '2rem' }}>Panel de <span className="highlight">Control</span></h2>
+          </div>
+          
           <form onSubmit={handleLogin}>
             <div className="filter-group" style={{ marginBottom: '20px' }}>
               <label>CORREO ELECTRÓNICO</label>
@@ -291,12 +249,12 @@ const Admin = () => {
               <label>CONTRASEÑA</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
-            {error && <p style={{ color: 'red', fontSize: '0.8rem', marginBottom: '16px' }}>{error}</p>}
+            {error && <p style={{ color: '#ff4d4d', fontSize: '0.8rem', marginBottom: '16px', textAlign: 'center' }}>{error}</p>}
+            {session && !isAdmin && <p style={{ color: '#ff4d4d', fontSize: '0.8rem', marginBottom: '16px', textAlign: 'center' }}>Acceso denegado: No tienes permisos de administrador.</p>}
             <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-              {loading ? 'CARGANDO...' : 'INICIAR SESIÓN'}
+              {loading ? 'SOLICITANDO ACCESO...' : 'ENTRAR AL SISTEMA'}
             </button>
           </form>
-          <p style={{ marginTop: '24px', fontSize: '0.7rem', textAlign: 'center', opacity: 0.5 }}>DEMO ONLY: admin@clickcar.com / admin123</p>
         </div>
       </div>
     )
