@@ -904,18 +904,29 @@ h1, h2, h3 {
   .hero-buttons {
     flex-direction: column;
     width: 100%;
-    max-width: 340px; /* Un poco más de ancho para que el texto luzca */
+    max-width: 360px; /* Más ancho para que el texto luzca brutal */
     margin-top: 50px;
     gap: 20px !important;
   }
   .btn-hero {
     width: 100% !important;
     padding: 24px !important;
-    font-size: 1.3rem !important; /* Texto MUCHO más grande */
-    font-weight: 900 !important;
-    letter-spacing: 0.1em !important;
-    text-transform: uppercase;
+    height: auto !important;
+    min-height: 100px;
     justify-content: center !important;
+  }
+  .btn-title {
+    font-size: 1.8rem !important; /* ¡TAMAÑO EXTREMO! */
+    font-weight: 900 !important;
+    display: block;
+    line-height: 1 !important;
+    margin-top: 4px;
+    letter-spacing: 0.1em;
+  }
+  .btn-label {
+    font-size: 0.75rem !important;
+    opacity: 0.7;
+    letter-spacing: 0.3em;
   }
 
   /* Grids Adaptables */
