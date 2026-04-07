@@ -350,9 +350,10 @@ const Venta = () => {
                           </div>
                         ))}
                         {previews.images.length < 10 && (
-                          <div style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed rgba(255,255,255,0.2)' }}>
+                          <label style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed rgba(255,255,255,0.2)', cursor: 'pointer' }}>
                             <PlusCircle size={24} style={{ opacity: 0.3 }} />
-                          </div>
+                            <input type="file" accept="image/*" multiple onChange={(e) => handleFileChange(e, 'images')} style={{ display: 'none' }} />
+                          </label>
                         )}
                       </div>
 

@@ -32,14 +32,22 @@ const VehicleDetail = ({ vehicle, onClose }) => {
           {/* Left: Gallery */}
           <div className="modal-gallery">
             <div className="main-media">
-              {showVideo ? (
-                <div style={{ width: '100%', height: '100%', background: '#000', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  {/* Mock Video Placeholder */}
-                  <div style={{ textAlign: 'center' }}>
-                    <PlayCircle size={64} color="var(--primary)" />
-                    <p style={{ marginTop: '16px', color: 'var(--text-secondary)' }}>VIDEO TOUR: {vehicle.model}</p>
-                    <button className="btn btn-primary" style={{ marginTop: '24px' }} onClick={() => setShowVideo(false)}>VER FOTOS</button>
-                  </div>
+              {showVideo && vehicle.video_url ? (
+                <div style={{ width: '100%', height: '100%', background: '#000', borderRadius: '24px', overflow: 'hidden' }}>
+                  <video 
+                    src={vehicle.video_url} 
+                    controls 
+                    autoPlay 
+                    className="gallery-main-video" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                  />
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ position: 'absolute', bottom: '24px', left: '24px', zIndex: 10 }} 
+                    onClick={() => setShowVideo(false)}
+                  >
+                    REGRESAR A FOTOS
+                  </button>
                 </div>
               ) : (
                 <>

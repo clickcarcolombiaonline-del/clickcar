@@ -668,33 +668,36 @@ const Admin = () => {
                     </h4>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
                       {previews.images.map((src, i) => (
-                        <div key={i} style={{ width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden' }}>
+                        <div key={i} style={{ width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
                           <img src={src} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <button onClick={() => setPreviews({...previews, images: previews.images.filter((_, idx) => idx !== i)})} style={{ position: 'absolute', top: 0, right: 0, background: 'red', border: 'none', color: 'white', cursor: 'pointer', padding: '2px', fontSize: '10px' }}>×</button>
                         </div>
                       ))}
-                      <label className="btn glass" style={{ width: '60px', height: '60px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
+                      <label className="btn glass glow-blue" style={{ width: '60px', height: '60px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed var(--primary)' }}>
                         <PlusCircle size={24} />
-                        <input type="file" multiple accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => handleFileChange(e, 'images')} />
+                        <input type="file" multiple accept="image/*" style={{ display: 'none' }} onChange={e => handleFileChange(e, 'images')} />
                       </label>
                     </div>
                   </div>
 
-                  {/* Video Upload - Mobile Friendly */}
+                  {/* Video Upload - Real Player */}
                   <div className="glass" style={{ padding: '24px', borderRadius: '16px', border: '1px dashed var(--secondary)' }}>
                     <h4 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px', color: 'var(--secondary)' }}>
-                      <Video size={20} /> VIDEO TOUR / CÁMARA
+                      <Video size={20} /> VIDEO TOUR REAL
                     </h4>
                     {previews.video ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div className="glow-green" style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '0.8rem', background: 'rgba(57, 255, 20, 0.2)' }}>
-                          VIDEO CARGADO
-                        </div>
-                        <button className="btn-text" onClick={() => { setPreviews({...previews, video: null}); setUploadFiles({...uploadFiles, video: null}); }} style={{ color: 'red' }}>Eliminar</button>
+                      <div style={{ width: '100%', borderRadius: '16px', overflow: 'hidden', background: '#000' }}>
+                        <video 
+                          src={previews.video} 
+                          controls 
+                          style={{ width: '100%', height: '180px', objectFit: 'cover' }} 
+                        />
+                        <button className="btn-text" onClick={() => { setPreviews({...previews, video: null}); setUploadFiles({...uploadFiles, video: null}); }} style={{ color: 'red', marginTop: '10px', display: 'block', textAlign: 'center', width: '100%' }}>Eliminar Video</button>
                       </div>
                     ) : (
-                      <label className="btn glass" style={{ width: '100%', padding: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-                        <FileText size={20} /> GRABAR O CARGAR VIDEO
-                        <input type="file" accept="video/*" capture="environment" style={{ display: 'none' }} onChange={e => handleFileChange(e, 'video')} />
+                      <label className="btn glass glow-green" style={{ width: '100%', padding: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                        <FileText size={20} /> GRABAR O CARGAR VÍDEO
+                        <input type="file" accept="video/*" onChange={e => handleFileChange(e, 'video')} style={{ display: 'none' }} />
                       </label>
                     )}
                   </div>
