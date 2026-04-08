@@ -679,7 +679,7 @@ const Admin = () => {
               </div>
             </motion.div>
             );
-          })}
+          })()}
 
           {activeTab === 'new' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
