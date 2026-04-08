@@ -13,7 +13,39 @@ const Admin = () => {
   const [pendingListings, setPendingListings] = useState([])
   const [inventoryListings, setInventoryListings] = useState([])
   const [brands, setBrands] = useState([])
+  const [editingVehicle, setEditingVehicle] = useState(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  const handleUpdateVehicle = async () => {
+    if (!editingVehicle.make || !editingVehicle.model || !editingVehicle.price) {
+      alert('Completa Marca, Modelo y Precio')
+      return
+    }
+    setLoading(true)
+    try {
+      const { error } = await supabase
+        .from('vehicles')
+        .update({
+          make: editingVehicle.make,
+          model: editingVehicle.model,
+          year: parseInt(editingVehicle.year),
+          price: parseInt(String(editingVehicle.price).replace(/\D/g, '')),
+          mileage: parseInt(String(editingVehicle.mileage).replace(/\D/g, '')),
+          condition: editingVehicle.condition || 'Excelente',
+          description: editingVehicle.description || ''
+        })
+        .eq('id', editingVehicle.id)
+        
+      if (error) throw error
+      alert('¡Vehículo actualizado correctamente!')
+      setEditingVehicle(null)
+      setRefreshTrigger(p => p + 1)
+    } catch (err) {
+      alert('Error al actualizar: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
   const [isRecording, setIsRecording] = useState(false)
   const [newBrandName, setNewBrandName] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
@@ -593,7 +625,7 @@ const Admin = () => {
                       </div>
                       
                       <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
-                        <button className="btn" onClick={() => alert('Función de editar en el siguiente paso...')} style={{ padding: '8px 20px', fontSize: '0.85rem', background: 'white', color: 'black', borderRadius: '10px' }}>
+                        <button className="btn" onClick={() => setEditingVehicle(listing)} style={{ padding: '8px 20px', fontSize: '0.85rem', background: 'white', color: 'black', borderRadius: '10px' }}>
                           <Edit3 size={16} style={{marginRight: '6px'}}/> EDITAR
                         </button>
                         <button className="btn glass" onClick={() => deleteListing(listing.id)} style={{ color: '#ff4d4d', padding: '8px 20px', fontSize: '0.85rem', borderColor: 'rgba(255,0,0,0.2)' }}>
@@ -760,6 +792,61 @@ const Admin = () => {
           )}
         </div>
       </div>
+
+      {/* MODAL DE EDICIÓN DE VEHÍCULO */}
+      {editingVehicle && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '20px' }}>
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass" style={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', borderRadius: '24px', position: 'relative' }}>
+            <button onClick={() => setEditingVehicle(null)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'white', fontSize: '2rem', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
+            <h2 style={{ fontSize: '2rem', marginBottom: '24px' }}>EDITAR <span className="highlight">VEHÍCULO</span></h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div className="filter-group">
+                <label>MARCA</label>
+                <input type="text" value={editingVehicle.make || ''} onChange={e => setEditingVehicle({...editingVehicle, make: e.target.value})} />
+              </div>
+              <div className="filter-group">
+                <label>MODELO</label>
+                <input type="text" value={editingVehicle.model || ''} onChange={e => setEditingVehicle({...editingVehicle, model: e.target.value})} />
+              </div>
+              <div className="filter-group">
+                <label>AÑO</label>
+                <input type="number" value={editingVehicle.year || ''} onChange={e => setEditingVehicle({...editingVehicle, year: e.target.value})} />
+              </div>
+              <div className="filter-group">
+                <label>PRECIO ($)</label>
+                <input type="number" value={editingVehicle.price || ''} onChange={e => setEditingVehicle({...editingVehicle, price: e.target.value})} />
+              </div>
+              <div className="filter-group">
+                <label>KILOMETRAJE</label>
+                <input type="number" value={editingVehicle.mileage || ''} onChange={e => setEditingVehicle({...editingVehicle, mileage: e.target.value})} />
+              </div>
+              <div className="filter-group">
+                <label>ESTADO</label>
+                <select value={editingVehicle.condition || 'Excelente'} onChange={e => setEditingVehicle({...editingVehicle, condition: e.target.value})} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '10px' }}>
+                   <option value="Excelente" style={{color: 'black'}}>Excelente</option>
+                   <option value="Bueno" style={{color: 'black'}}>Bueno</option>
+                   <option value="Usado" style={{color: 'black'}}>Usado</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="filter-group" style={{ marginBottom: '32px' }}>
+              <label>DESCRIPCIÓN</label>
+              <textarea value={editingVehicle.description || ''} onChange={e => setEditingVehicle({...editingVehicle, description: e.target.value})} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '10px', width: '100%', height: '100px', resize: 'none' }} />
+            </div>
+
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <button className="btn btn-primary" style={{ flex: 1, padding: '16px', justifyContent: 'center' }} onClick={handleUpdateVehicle} disabled={loading}>
+                {loading ? 'GUARDANDO...' : 'GUARDAR CAMBIOS'}
+              </button>
+              <button className="btn glass" style={{ width: '120px', justifyContent: 'center', background: 'rgba(255,255,255,0.1)' }} onClick={() => setEditingVehicle(null)}>
+                CANCELAR
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       <style dangerouslySetInnerHTML={{ __html: `
         .admin-nav-btn {
