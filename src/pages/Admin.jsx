@@ -11,6 +11,7 @@ const Admin = () => {
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('approvals')
   const [pendingListings, setPendingListings] = useState([])
+  const [inventoryListings, setInventoryListings] = useState([])
   const [brands, setBrands] = useState([])
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [isRecording, setIsRecording] = useState(false)
@@ -146,6 +147,17 @@ const Admin = () => {
           if (data) setPendingListings(data)
         }
         fetchPending()
+      }
+
+      if (activeTab === 'inventory') {
+        const fetchInventory = async () => {
+          const { data } = await supabase
+            .from('vehicles')
+            .select('*, profiles(full_name, phone, email)')
+            .order('created_at', { ascending: false })
+          if (data) setInventoryListings(data)
+        }
+        fetchInventory()
       }
 
       const fetchAllSettings = async () => {
@@ -481,6 +493,9 @@ const Admin = () => {
             <button className={`admin-nav-btn ${activeTab === 'approvals' ? 'active' : ''}`} onClick={() => setActiveTab('approvals')}>
               <CheckCircle size={18} /> APROBACIONES
             </button>
+            <button className={`admin-nav-btn ${activeTab === 'inventory' ? 'active' : ''}`} onClick={() => setActiveTab('inventory')}>
+              <LayoutDashboard size={18} /> INVENTARIO TOTAL
+            </button>
             <button className={`admin-nav-btn ${activeTab === 'new' ? 'active' : ''}`} onClick={() => setActiveTab('new')}>
               <PlusCircle size={18} /> NUEVO VEHÍCULO
             </button>
@@ -538,6 +553,57 @@ const Admin = () => {
                   </div>
                 ))}
                 {pendingListings.length === 0 && <p style={{ opacity: 0.5, textAlign: 'center', padding: '40px' }}>No hay vehículos pendientes por aprobar.</p>}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'inventory' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <h2 style={{ fontSize: '2.5rem', marginBottom: '32px' }}>INVENTARIO <span className="highlight">TOTAL</span></h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {inventoryListings.map(listing => (
+                  <div key={listing.id} className="glass" style={{ padding: '20px', borderRadius: '20px', display: 'flex', gap: '24px', alignItems: 'center' }}>
+                    <div style={{ width: '180px', flexShrink: 0 }}>
+                      <div style={{ width: '100%', height: '120px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <img src={listing.photos_urls?.[0] || 'https://images.unsplash.com/photo-1614162692292-7ac56d777ac1?auto=format&fit=crop&q=80&w=800'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h4 style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>{listing.make} {listing.model} {listing.year}</h4>
+                          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '6px' }}>
+                            <span style={{ 
+                                padding: '4px 10px', 
+                                borderRadius: '20px', 
+                                fontSize: '0.75rem', 
+                                fontWeight: 'bold', 
+                                background: listing.approved_status ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 165, 0, 0.1)', 
+                                color: listing.approved_status ? '#00ff00' : 'orange',
+                                border: \`1px solid \${listing.approved_status ? 'rgba(0,255,0,0.3)' : 'rgba(255,165,0,0.3)'}\`
+                              }}>
+                              {listing.approved_status ? 'PUBLICADO' : 'PENDIENTE'}
+                            </span>
+                            <span style={{ opacity: 0.7, fontSize: '0.8rem' }}>
+                              ID: {listing.id.substring(0, 8)}...
+                            </span>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '1.2rem', color: 'var(--primary)', fontWeight: '900' }}>${(listing.price || 0).toLocaleString()}</span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                        <button className="btn" onClick={() => alert('Función de editar en el siguiente paso...')} style={{ padding: '8px 20px', fontSize: '0.85rem', background: 'white', color: 'black', borderRadius: '10px' }}>
+                          <Edit3 size={16} style={{marginRight: '6px'}}/> EDITAR
+                        </button>
+                        <button className="btn glass" onClick={() => deleteListing(listing.id)} style={{ color: '#ff4d4d', padding: '8px 20px', fontSize: '0.85rem', borderColor: 'rgba(255,0,0,0.2)' }}>
+                          <Trash2 size={16} style={{marginRight: '6px'}}/> ELIMINAR
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {inventoryListings.length === 0 && <p style={{ opacity: 0.5, textAlign: 'center', padding: '40px' }}>No hay vehículos en el inventario.</p>}
               </div>
             </motion.div>
           )}
