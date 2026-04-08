@@ -601,7 +601,7 @@ const Admin = () => {
               if (inventoryFilterStatus === 'PENDING' && listing.approved_status) return false;
               if (inventoryFilterBrand !== 'ALL' && listing.make !== inventoryFilterBrand) return false;
               if (inventorySearch.trim() !== '') {
-                const searchStr = \`\${listing.make} \${listing.model} \${listing.year} \${listing.id}\`.toLowerCase();
+                const searchStr = (listing.make + ' ' + listing.model + ' ' + listing.year + ' ' + listing.id).toLowerCase();
                 return inventorySearch.toLowerCase().split(' ').every(term => searchStr.includes(term));
               }
               return true;
