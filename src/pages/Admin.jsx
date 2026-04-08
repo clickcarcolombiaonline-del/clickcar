@@ -803,7 +803,10 @@ const Admin = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div className="filter-group">
                 <label>MARCA</label>
-                <input type="text" value={editingVehicle.make || ''} onChange={e => setEditingVehicle({...editingVehicle, make: e.target.value})} />
+                <select value={editingVehicle.make || ''} onChange={e => setEditingVehicle({...editingVehicle, make: e.target.value})} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '10px' }}>
+                   <option value="" style={{color: 'black'}}>Seleccionar Marca</option>
+                   {brands.map(b => <option key={b.id} value={b.name} style={{color: 'black'}}>{b.name}</option>)}
+                </select>
               </div>
               <div className="filter-group">
                 <label>MODELO</label>
