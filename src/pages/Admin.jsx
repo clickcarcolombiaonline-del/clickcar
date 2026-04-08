@@ -510,6 +510,7 @@ const Admin = () => {
   }
 
   return (
+    <>
     <div className="page-enter container" style={{ padding: '40px 0' }}>
       <div style={{ display: 'flex', gap: '32px' }}>
         {/* Sidebar */}
@@ -792,10 +793,11 @@ const Admin = () => {
           )}
         </div>
       </div>
+    </div> {/* --- FIN DEL PAGE-ENTER (Aisla el CSS) --- */}
 
       {/* MODAL DE EDICIÓN DE VEHÍCULO */}
       {editingVehicle && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '20px' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100vh', background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 99999, padding: '20px' }}>
           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ background: '#111111', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', padding: '32px', borderRadius: '24px', position: 'relative' }}>
             <button onClick={() => setEditingVehicle(null)} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'white', fontSize: '2rem', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
             <h2 style={{ fontSize: '2rem', marginBottom: '24px' }}>EDITAR <span className="highlight">VEHÍCULO</span></h2>
@@ -860,7 +862,7 @@ const Admin = () => {
         .admin-nav-btn.active { background: rgba(255,255,255,0.1); opacity: 1; color: var(--primary); }
         .admin-nav-btn:hover { opacity: 1; background: rgba(255,255,255,0.05); }
       `}} />
-    </div>
+    </>
   )
 }
 
