@@ -16,6 +16,11 @@ const Admin = () => {
   const [editingVehicle, setEditingVehicle] = useState(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
+  // Filtros del Inventario
+  const [inventorySearch, setInventorySearch] = useState('')
+  const [inventoryFilterStatus, setInventoryFilterStatus] = useState('ALL')
+  const [inventoryFilterBrand, setInventoryFilterBrand] = useState('ALL')
+
   const handleUpdateVehicle = async () => {
     if (!editingVehicle.make || !editingVehicle.model || !editingVehicle.price) {
       alert('Completa Marca, Modelo y Precio')
@@ -590,11 +595,45 @@ const Admin = () => {
             </motion.div>
           )}
 
-          {activeTab === 'inventory' && (
+          {activeTab === 'inventory' && (() => {
+            const filteredInventory = inventoryListings.filter(listing => {
+              if (inventoryFilterStatus === 'PUBLISHED' && !listing.approved_status) return false;
+              if (inventoryFilterStatus === 'PENDING' && listing.approved_status) return false;
+              if (inventoryFilterBrand !== 'ALL' && listing.make !== inventoryFilterBrand) return false;
+              if (inventorySearch.trim() !== '') {
+                const searchStr = \`\${listing.make} \${listing.model} \${listing.year} \${listing.id}\`.toLowerCase();
+                return inventorySearch.toLowerCase().split(' ').every(term => searchStr.includes(term));
+              }
+              return true;
+            });
+
+            return (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <h2 style={{ fontSize: '2.5rem', marginBottom: '32px' }}>INVENTARIO <span className="highlight">TOTAL</span></h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                <h2 style={{ fontSize: '2.5rem', margin: 0 }}>INVENTARIO <span className="highlight">TOTAL</span></h2>
+                <span style={{ background: 'rgba(255,255,255,0.05)', padding: '8px 16px', borderRadius: '12px', fontSize: '0.9rem', color: 'var(--primary)' }}>
+                  {filteredInventory.length} Vehículos
+                </span>
+              </div>
+              
+              {/* BARRA DE FILTROS */}
+              <div className="glass" style={{ padding: '20px', borderRadius: '16px', marginBottom: '24px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <input type="text" placeholder="Buscar modelo, año o ID..." value={inventorySearch} onChange={e => setInventorySearch(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+                </div>
+                <select value={inventoryFilterStatus} onChange={e => setInventoryFilterStatus(e.target.value)} style={{ padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', minWidth: '150px' }}>
+                  <option value="ALL" style={{color:'black'}}>📋 Todos los estados</option>
+                  <option value="PUBLISHED" style={{color:'black'}}>✅ Publicados</option>
+                  <option value="PENDING" style={{color:'black'}}>⏳ Pendientes</option>
+                </select>
+                <select value={inventoryFilterBrand} onChange={e => setInventoryFilterBrand(e.target.value)} style={{ padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', minWidth: '150px' }}>
+                  <option value="ALL" style={{color:'black'}}>🏷️ Todas las marcas</option>
+                  {brands.map(b => <option key={b.id} value={b.name} style={{color:'black'}}>{b.name}</option>)}
+                </select>
+              </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {inventoryListings.map(listing => (
+                {filteredInventory.map(listing => (
                   <div key={listing.id} className="glass" style={{ padding: '20px', borderRadius: '20px', display: 'flex', gap: '24px', alignItems: 'center' }}>
                     <div style={{ width: '180px', flexShrink: 0 }}>
                       <div style={{ width: '100%', height: '120px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -636,10 +675,11 @@ const Admin = () => {
                     </div>
                   </div>
                 ))}
-                {inventoryListings.length === 0 && <p style={{ opacity: 0.5, textAlign: 'center', padding: '40px' }}>No hay vehículos en el inventario.</p>}
+                {filteredInventory.length === 0 && <p style={{ opacity: 0.5, textAlign: 'center', padding: '40px' }}>No se encontraron vehículos con estos filtros.</p>}
               </div>
             </motion.div>
-          )}
+            );
+          })}
 
           {activeTab === 'new' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
