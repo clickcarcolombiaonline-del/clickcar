@@ -18,38 +18,47 @@ const Venta = () => {
     fetchBrands()
   }, [])
 
-  // NATIVE TURNSTILE IMPLEMENTATION:
-  React.useEffect(() => {
-    if (step === 3) {
-      // Small delay to let framer-motion mount the DOM element
-      setTimeout(() => {
-        const container = document.getElementById('native-turnstile-container')
-        if (container && window.turnstile) {
+  const TurnstileWidget = () => {
+    const containerRef = React.useRef(null)
+
+    React.useEffect(() => {
+      let widgetId = null
+      
+      const initTurnstile = () => {
+        if (containerRef.current && window.turnstile) {
           try {
-            window.turnstile.render(container, {
-              sitekey: '0x4AAAAAAAC5VnabCyK9og3l8',
+            // USAMOS LA LLAVE DE PRUEBA GLOBAL DE CLOUDFLARE PARA DESCARTAR ERRORES DE DASHBOARD
+            widgetId = window.turnstile.render(containerRef.current, {
+              sitekey: '1x00000000000000000000AA', 
               theme: 'dark',
               callback: (token) => {
                 setTurnstileToken(token)
                 setError(null)
               },
               'error-callback': (err) => {
-                console.error("Turnstile falló orgánicamente", err)
-                setError("Alerta: Captcha bloqueado por AdBlocker o error de conexión.")
-              },
-              'expired-callback': () => {
-                setTurnstileToken(null)
+                console.error("Turnstile error:", err)
               }
             })
           } catch (e) {
-            console.error("Error injectando Turnstile:", e)
+            console.error("Native render error:", e)
           }
         } else if (!window.turnstile) {
-          setError("Script de Cloudflare bloqueado por un AdBlocker o navegador estricto.")
+          // Si no cargó el script de cloudflare, lo re-intentamos en 500ms
+          setTimeout(initTurnstile, 500)
         }
-      }, 300)
-    }
-  }, [step])
+      }
+
+      initTurnstile()
+
+      return () => {
+        if (widgetId !== null && window.turnstile) {
+          window.turnstile.remove(widgetId)
+        }
+      }
+    }, [])
+
+    return <div ref={containerRef}></div>
+  }
 
   const fetchBrands = async () => {
     try {
@@ -455,7 +464,7 @@ const Venta = () => {
                   </div>
 
                   <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center', minHeight: '65px' }}>
-                    <div id="native-turnstile-container"></div>
+                    <TurnstileWidget />
                   </div>
 
                   <div style={{ display: 'flex', gap: '20px' }}>
