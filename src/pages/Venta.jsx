@@ -429,6 +429,11 @@ const Venta = () => {
                         setTurnstileToken(token)
                         setError(null)
                       }}
+                      onError={(err) => {
+                        console.error("Turnstile falló al cargar", err)
+                        setError("Alerta: El Captcha no pudo cargar. O la llave puesta en Vercel es incorrecta (tiene errores de mayúsculas/minúsculas) o el Dominio sigue sin estar autorizado.")
+                      }}
+                      onExpire={() => setTurnstileToken(null)}
                       options={{ theme: 'dark' }}
                     />
                   </div>
@@ -437,7 +442,7 @@ const Venta = () => {
                     <button type="button" className="btn glass" style={{ flex: 1, justifyContent: 'center' }} onClick={prevStep}>
                       VOLVER
                     </button>
-                    <button type="submit" className="btn btn-secondary glow-green" style={{ flex: 1, justifyContent: 'center' }} disabled={loading || !turnstileToken}>
+                    <button type="submit" className="btn btn-secondary glow-green" style={{ flex: 1, justifyContent: 'center' }} disabled={loading}>
                       {loading ? 'ENVIANDO...' : 'ENVIAR PARA APROBACIÓN'}
                     </button>
                   </div>
