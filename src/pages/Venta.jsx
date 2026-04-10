@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { CheckCircle2, User, Car, Image, Video, Send, Camera, PlusCircle, Trash2, X } from 'lucide-react'
+import { Turnstile } from '@marsidev/react-turnstile'
 
 const Venta = () => {
   const [step, setStep] = useState(1)
@@ -9,6 +10,7 @@ const Venta = () => {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState(null)
   const [brands, setBrands] = useState([])
+  const [turnstileToken, setTurnstileToken] = useState(null)
 
   const [uploadFiles, setUploadFiles] = useState({ images: [], video: null })
   const [previews, setPreviews] = useState({ images: [], video: null })
@@ -107,6 +109,12 @@ const Venta = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (!turnstileToken) {
+      setError('Por favor completa la verificación de seguridad anti-bots.')
+      return
+    }
+
     setLoading(true)
     setError(null)
     
@@ -414,11 +422,22 @@ const Venta = () => {
                     </div>
                   </div>
 
+                  <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
+                    <Turnstile
+                      siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
+                      onSuccess={(token) => {
+                        setTurnstileToken(token)
+                        setError(null)
+                      }}
+                      options={{ theme: 'dark' }}
+                    />
+                  </div>
+
                   <div style={{ display: 'flex', gap: '20px' }}>
                     <button type="button" className="btn glass" style={{ flex: 1, justifyContent: 'center' }} onClick={prevStep}>
                       VOLVER
                     </button>
-                    <button type="submit" className="btn btn-secondary glow-green" style={{ flex: 1, justifyContent: 'center' }} disabled={loading}>
+                    <button type="submit" className="btn btn-secondary glow-green" style={{ flex: 1, justifyContent: 'center' }} disabled={loading || !turnstileToken}>
                       {loading ? 'ENVIANDO...' : 'ENVIAR PARA APROBACIÓN'}
                     </button>
                   </div>
