@@ -27,9 +27,9 @@ const Venta = () => {
       const initTurnstile = () => {
         if (containerRef.current && window.turnstile) {
           try {
-            // LLAVE INTERACTIVA DE PRUEBA GLOBAL - FORZA EL RENDERIZADO SIEMPRE PARA PRUEBAS
+            // RESTAURAMOS LA LLAVE REAL PARA PRODUCCIÓN LUEGO DE AISLAR EL BUG
             widgetId = window.turnstile.render(containerRef.current, {
-              sitekey: '3x00000000000000000000FF', 
+              sitekey: '0x4AAAAAAAC5VnabCyK9og3l8', 
               theme: 'dark',
               callback: (token) => {
                 setTurnstileToken(token)
