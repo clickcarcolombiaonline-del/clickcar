@@ -37,10 +37,12 @@ const Venta = () => {
               },
               'error-callback': (err) => {
                 console.error("Turnstile error:", err)
+                setError(`Cloudflare falló al mostrar el Captcha. Código: ${String(err)}`)
               }
             })
           } catch (e) {
             console.error("Native render error:", e)
+            setError(`Error cargando Cloudflare: ${String(e)}`)
           }
         } else if (!window.turnstile) {
           // Si no cargó el script de cloudflare, lo re-intentamos en 500ms
