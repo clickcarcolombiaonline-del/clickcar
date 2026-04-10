@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { CheckCircle2, User, Car, Image, Video, Send, Camera, PlusCircle, Trash2, X } from 'lucide-react'
-import { Turnstile } from '@marsidev/react-turnstile'
 
 const Venta = () => {
   const [step, setStep] = useState(1)
@@ -18,6 +17,39 @@ const Venta = () => {
   React.useEffect(() => {
     fetchBrands()
   }, [])
+
+  // NATIVE TURNSTILE IMPLEMENTATION:
+  React.useEffect(() => {
+    if (step === 3) {
+      // Small delay to let framer-motion mount the DOM element
+      setTimeout(() => {
+        const container = document.getElementById('native-turnstile-container')
+        if (container && window.turnstile) {
+          try {
+            window.turnstile.render(container, {
+              sitekey: '0x4AAAAAAAC5VnabCyK9og3l8',
+              theme: 'dark',
+              callback: (token) => {
+                setTurnstileToken(token)
+                setError(null)
+              },
+              'error-callback': (err) => {
+                console.error("Turnstile falló orgánicamente", err)
+                setError("Alerta: Captcha bloqueado por AdBlocker o error de conexión.")
+              },
+              'expired-callback': () => {
+                setTurnstileToken(null)
+              }
+            })
+          } catch (e) {
+            console.error("Error injectando Turnstile:", e)
+          }
+        } else if (!window.turnstile) {
+          setError("Script de Cloudflare bloqueado por un AdBlocker o navegador estricto.")
+        }
+      }, 300)
+    }
+  }, [step])
 
   const fetchBrands = async () => {
     try {
@@ -423,22 +455,7 @@ const Venta = () => {
                   </div>
 
                   <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center', minHeight: '65px' }}>
-                    <Turnstile
-                      key="turnstile-form-venta"
-                      siteKey="0x4AAAAAAAC5VnabCyK9og3l8"
-                      injectScript={false}
-                      onSuccess={(token) => {
-                        setTurnstileToken(token)
-                        setError(null)
-                      }}
-                      onError={(err) => {
-                        const errCode = typeof err === 'string' ? err : (err?.message || JSON.stringify(err) || 'Desconocido');
-                        console.error("Turnstile falló al cargar", err)
-                        setError("Alerta de Cloudflare: Fallo técnico. Código exacto de tu error: " + errCode)
-                      }}
-                      onExpire={() => setTurnstileToken(null)}
-                      options={{ theme: 'dark' }}
-                    />
+                    <div id="native-turnstile-container"></div>
                   </div>
 
                   <div style={{ display: 'flex', gap: '20px' }}>
