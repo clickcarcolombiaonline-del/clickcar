@@ -422,16 +422,19 @@ const Venta = () => {
                     </div>
                   </div>
 
-                  <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center', minHeight: '65px' }}>
                     <Turnstile
-                      siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
+                      key="turnstile-form-venta"
+                      siteKey="0x4AAAAAAAC5VnabCyK9og3l8"
+                      injectScript={false}
                       onSuccess={(token) => {
                         setTurnstileToken(token)
                         setError(null)
                       }}
                       onError={(err) => {
+                        const errCode = typeof err === 'string' ? err : (err?.message || JSON.stringify(err) || 'Desconocido');
                         console.error("Turnstile falló al cargar", err)
-                        setError("Alerta: El Captcha no pudo cargar. O la llave puesta en Vercel es incorrecta (tiene errores de mayúsculas/minúsculas) o el Dominio sigue sin estar autorizado.")
+                        setError("Alerta de Cloudflare: Fallo técnico. Código exacto de tu error: " + errCode)
                       }}
                       onExpire={() => setTurnstileToken(null)}
                       options={{ theme: 'dark' }}
