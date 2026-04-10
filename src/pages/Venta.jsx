@@ -27,9 +27,9 @@ const Venta = () => {
       const initTurnstile = () => {
         if (containerRef.current && window.turnstile) {
           try {
-            // USAMOS LA LLAVE DE PRUEBA GLOBAL DE CLOUDFLARE PARA DESCARTAR ERRORES DE DASHBOARD
+            // RESTAURAMOS LA LLAVE REAL PARA PRODUCCIÓN LUEGO DE CONFIRMAR QUE EL COMPONENTE FUNCIONA
             widgetId = window.turnstile.render(containerRef.current, {
-              sitekey: '1x00000000000000000000AA', 
+              sitekey: '0x4AAAAAAAC5VnabCyK9og3l8', 
               theme: 'dark',
               callback: (token) => {
                 setTurnstileToken(token)
