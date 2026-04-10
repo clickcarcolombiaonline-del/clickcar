@@ -61,8 +61,7 @@ const Venta = () => {
       }
 
       // INICIAMOS CON LA LLAVE REAL DE PRODUCCION:
-      // SIMULACION DE ATAQUE: 2x00000000000000000000AB bloquea siempre.
-      initTurnstile('2x00000000000000000000AB')
+      initTurnstile('0x4AAAAAAAC5BeE6npZtUdLr5')
 
       return () => {
         if (widgetId !== null && window.turnstile) {
