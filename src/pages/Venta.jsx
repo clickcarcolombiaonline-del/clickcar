@@ -29,7 +29,7 @@ const Venta = () => {
           try {
             // RESTAURAMOS LA LLAVE REAL PARA PRODUCCIÓN LUEGO DE AISLAR EL BUG
             widgetId = window.turnstile.render(containerRef.current, {
-              sitekey: '0x4AAAAAAAC5VnabCyK9og3l8', 
+              sitekey: '0x4AAAAAAAC5BeE6npZtUdLr5', 
               theme: 'dark',
               callback: (token) => {
                 setTurnstileToken(token)
