@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
 import Compra from './pages/Compra'
 import Venta from './pages/Venta'
@@ -9,6 +9,20 @@ import Footer from './components/Footer'
 import ChatWidget from './components/ChatWidget'
 import Auth from './pages/Auth'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+
+const SUPER_ADMINS = ['agentemonteriacordoba@gmail.com']; // Pon tu correo aquí
+
+function AdminRoute({ children }) {
+  const { user } = useAuth();
+  
+  if (!SUPER_ADMINS.includes(user?.email)) {
+    // Si no es el administrador, lo manda a la página de inicio
+    return <Navigate to="/" replace />;
+  }
+  
+  // Si es el administrador, le muestra la página
+  return children;
+}
 
 function ProtectedApp() {
   const { user, loading } = useAuth();
@@ -29,7 +43,14 @@ function ProtectedApp() {
           <Route path="/" element={<Home />} />
           <Route path="/compra" element={<Compra />} />
           <Route path="/venta" element={<Venta />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route 
+            path="/admin" 
+            element={
+              <AdminRoute>
+                <Admin />
+              </AdminRoute>
+            } 
+          />
         </Routes>
       </main>
       <Footer />
