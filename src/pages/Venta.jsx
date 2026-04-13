@@ -142,11 +142,10 @@ const Venta = () => {
     name: '',
     phone: '',
     email: '',
-    year: '',
     make: '',
     model: '',
     mileage: '',
-    condition: 'Nuevo',
+    condition: 'Usado',
     price: '',
     fuelType: 'Gasolina',
     photos: [],
@@ -156,6 +155,18 @@ const Venta = () => {
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handlePriceChange = (e) => {
+    // Solo dejar digitos
+    const rawValue = e.target.value.replace(/\D/g, '')
+    setFormData(prev => ({ ...prev, price: rawValue }))
+  }
+
+  const handleMileageChange = (e) => {
+    // Solo dejar digitos
+    const rawValue = e.target.value.replace(/\D/g, '')
+    setFormData(prev => ({ ...prev, mileage: rawValue }))
   }
 
   const nextStep = () => setStep(step + 1)
@@ -226,7 +237,7 @@ const Venta = () => {
           user_id: profile.id,
           make: formData.make,
           model: formData.model,
-          year: parseInt(formData.year) || new Date().getFullYear(),
+          year: new Date().getFullYear(), // el usuario pondrá el año dentro de "modelo"
           mileage: parseInt(formData.mileage) || 0,
           price: parseFloat(formData.price) || 0,
           fuel_type: formData.fuelType || 'Gasolina',
@@ -346,19 +357,25 @@ const Venta = () => {
                       </select>
                     </div>
                     <div className="filter-group">
-                      <label>MODELO *</label>
-                      <input type="text" name="model" required value={formData.model} onChange={handleChange} placeholder="Ej. M4" />
+                      <label>MODELO Y AÑO *</label>
+                      <input type="text" name="model" required value={formData.model} onChange={handleChange} placeholder="Ej. Prado TXL 2024" />
                     </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                     <div className="filter-group">
-                      <label>AÑO *</label>
-                      <input type="number" name="year" required value={formData.year} onChange={handleChange} placeholder="2024" />
+                      <label>KILOMETRAJE *</label>
+                      <input type="text" name="mileage" required 
+                             value={formData.mileage ? Number(formData.mileage).toLocaleString('es-CO') + ' km' : ''} 
+                             onChange={handleMileageChange} 
+                             placeholder="Ej. 25.000 km" />
                     </div>
                     <div className="filter-group">
-                      <label>KILOMETRAJE *</label>
-                      <input type="number" name="mileage" required value={formData.mileage} onChange={handleChange} placeholder="2000" />
+                      <label>PRECIO DE VENTA (COP) *</label>
+                      <input type="text" name="price" required 
+                             value={formData.price ? '$ ' + Number(formData.price).toLocaleString('es-CO') : ''} 
+                             onChange={handlePriceChange} 
+                             placeholder="Ej. $ 85.000.000" />
                     </div>
                   </div>
 
@@ -373,8 +390,11 @@ const Venta = () => {
                       </select>
                     </div>
                     <div className="filter-group">
-                      <label>PRECIO DE VENTA ($) *</label>
-                      <input type="number" name="price" required value={formData.price} onChange={handleChange} placeholder="85000" />
+                      <label>ESTADO *</label>
+                      <select name="condition" value={formData.condition} onChange={handleChange} className="brand-highlight-select">
+                        <option value="Usado" style={{ color: '#000' }}>Usado</option>
+                        <option value="Nuevo" style={{ color: '#000' }}>Nuevo</option>
+                      </select>
                     </div>
                   </div>
                   

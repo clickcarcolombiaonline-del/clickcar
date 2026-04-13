@@ -20,6 +20,7 @@ const Admin = () => {
   const [inventorySearch, setInventorySearch] = useState('')
   const [inventoryFilterStatus, setInventoryFilterStatus] = useState('ALL')
   const [inventoryFilterBrand, setInventoryFilterBrand] = useState('ALL')
+  const [inventorySearchEmail, setInventorySearchEmail] = useState('')
 
   const handleUpdateVehicle = async () => {
     if (!editingVehicle.make || !editingVehicle.model || !editingVehicle.price) {
@@ -600,6 +601,7 @@ const Admin = () => {
               if (inventoryFilterStatus === 'PUBLISHED' && !listing.approved_status) return false;
               if (inventoryFilterStatus === 'PENDING' && listing.approved_status) return false;
               if (inventoryFilterBrand !== 'ALL' && listing.make !== inventoryFilterBrand) return false;
+              if (inventorySearchEmail.trim() !== '' && !(listing.profiles?.email || '').toLowerCase().includes(inventorySearchEmail.trim().toLowerCase())) return false;
               if (inventorySearch.trim() !== '') {
                 const searchStr = (listing.make + ' ' + listing.model + ' ' + listing.year + ' ' + listing.id).toLowerCase();
                 return inventorySearch.toLowerCase().split(' ').every(term => searchStr.includes(term));
@@ -618,8 +620,11 @@ const Admin = () => {
               
               {/* BARRA DE FILTROS */}
               <div className="glass" style={{ padding: '20px', borderRadius: '16px', marginBottom: '24px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <div style={{ flex: 1, minWidth: '200px' }}>
+                <div style={{ flex: 1, minWidth: '150px' }}>
                   <input type="text" placeholder="Buscar modelo, año o ID..." value={inventorySearch} onChange={e => setInventorySearch(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+                </div>
+                <div style={{ flex: 1, minWidth: '150px' }}>
+                  <input type="text" placeholder="Filtro de correo vendedor..." value={inventorySearchEmail} onChange={e => setInventorySearchEmail(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
                 </div>
                 <select value={inventoryFilterStatus} onChange={e => setInventoryFilterStatus(e.target.value)} style={{ padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', minWidth: '150px' }}>
                   <option value="ALL" style={{color:'black'}}>📋 Todos los estados</option>
