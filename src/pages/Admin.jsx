@@ -665,6 +665,11 @@ const Admin = () => {
                               ID: {listing.id.substring(0, 8)}...
                             </span>
                           </div>
+
+                          <div style={{ marginTop: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                            <div style={{ marginBottom: '4px' }}>📧 <strong>Correo:</strong> {listing.profiles?.email || 'No registrado'}</div>
+                            <div>📱 <strong>Teléfono:</strong> {listing.profiles?.phone || 'No registrado'}</div>
+                          </div>
                         </div>
                         <span style={{ fontSize: '1.2rem', color: 'var(--primary)', fontWeight: '900' }}>${(listing.price || 0).toLocaleString()}</span>
                       </div>
