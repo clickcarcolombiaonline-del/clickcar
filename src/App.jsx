@@ -9,13 +9,46 @@ import Footer from './components/Footer'
 import ChatWidget from './components/ChatWidget'
 import Auth from './pages/Auth'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-
-const SUPER_ADMINS = ['agentemonteriacordoba@gmail.com']; // Pon tu correo aquí
+import { supabase } from './lib/supabase'
 
 function AdminRoute({ children }) {
   const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = React.useState(null);
   
-  if (!SUPER_ADMINS.includes(user?.email)) {
+  React.useEffect(() => {
+    async function checkAdminRole() {
+      if (!user?.email) {
+        setIsAdmin(false);
+        return;
+      }
+      
+      try {
+        // Consultar a Supabase si el correo está en la tabla "admins"
+        const { data, error } = await supabase
+          .from('admins')
+          .select('email')
+          .eq('email', user.email)
+          .single();
+          
+        if (data) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (err) {
+        setIsAdmin(false);
+      }
+    }
+    
+    checkAdminRole();
+  }, [user]);
+
+  // Mientras consulta a la base de datos...
+  if (isAdmin === null) {
+    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'black', color: 'white' }}>Verificando permisos del servidor...</div>;
+  }
+  
+  if (!isAdmin) {
     // Si no es el administrador, lo manda a la página de inicio
     return <Navigate to="/" replace />;
   }
