@@ -582,6 +582,46 @@ h1, h2, h3 {
   text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
 }
 
+/* Optimización para el primer pantallazo en Celulares */
+@media (max-width: 768px) {
+  .filter-bar {
+    margin: 10px auto 20px;
+    padding: 12px 0;
+  }
+  
+  .filter-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .filter-group {
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .filter-group label {
+    font-size: 0.65rem;
+  }
+
+  .filter-group select, 
+  .filter-group input {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    height: 38px;
+  }
+  
+  .filter-container .btn {
+    grid-column: span 2;
+    padding: 10px;
+    margin-top: 5px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+  }
+}
+
 /* Vehicle Cards */
 .catalog-grid {
   display: grid;
