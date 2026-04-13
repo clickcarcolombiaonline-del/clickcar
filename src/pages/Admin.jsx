@@ -22,6 +22,24 @@ const Admin = () => {
   const [inventoryFilterBrand, setInventoryFilterBrand] = useState('ALL')
   const [inventorySearchEmail, setInventorySearchEmail] = useState('')
 
+  const uploadToCloudinary = async (file) => {
+    try {
+      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+      const preset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+      if (!cloudName || !preset) throw new Error('Configuración de Cloudinary incompleta')
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', preset)
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, { method: 'POST', body: formData })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error?.message || 'Error en Cloudinary')
+      return data.secure_url
+    } catch (err) {
+      console.error('Cloudinary update error:', err)
+      return null
+    }
+  }
+
   const handleUpdateVehicle = async () => {
     if (!editingVehicle.make || !editingVehicle.model || !editingVehicle.price) {
       alert('Completa Marca, Modelo y Precio')
@@ -29,6 +47,15 @@ const Admin = () => {
     }
     setLoading(true)
     try {
+      let finalPhotos = [...(editingVehicle.photos_urls || [])]
+      
+      if (editingVehicle.new_files && editingVehicle.new_files.length > 0) {
+        for (const file of editingVehicle.new_files) {
+          const url = await uploadToCloudinary(file)
+          if (url) finalPhotos.push(url)
+        }
+      }
+
       const { error } = await supabase
         .from('vehicles')
         .update({
@@ -38,7 +65,8 @@ const Admin = () => {
           price: parseInt(String(editingVehicle.price).replace(/\D/g, '')),
           mileage: parseInt(String(editingVehicle.mileage).replace(/\D/g, '')),
           condition: editingVehicle.condition || 'Excelente',
-          description: editingVehicle.description || ''
+          description: editingVehicle.description || '',
+          photos_urls: finalPhotos
         })
         .eq('id', editingVehicle.id)
         
@@ -886,9 +914,69 @@ const Admin = () => {
               </div>
             </div>
 
-            <div className="filter-group" style={{ marginBottom: '32px' }}>
+            <div className="filter-group" style={{ marginBottom: '24px' }}>
               <label>DESCRIPCIÓN</label>
               <textarea value={editingVehicle.description || ''} onChange={e => setEditingVehicle({...editingVehicle, description: e.target.value})} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '10px', width: '100%', height: '100px', resize: 'none' }} />
+            </div>
+
+            {/* GESTIÓN DE FOTOS */}
+            <div className="filter-group" style={{ marginBottom: '32px' }}>
+              <label>FOTOS DEL VEHÍCULO</label>
+              
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                {/* Fotos Existentes */}
+                {(editingVehicle.photos_urls || []).map((url, idx) => (
+                  <div key={idx} style={{ position: 'relative', width: '100px', height: '100px', borderRadius: '10px', overflow: 'hidden' }}>
+                    <img src={url} alt={`Foto ${idx+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <button 
+                      onClick={() => setEditingVehicle({
+                        ...editingVehicle, 
+                        photos_urls: editingVehicle.photos_urls.filter((_, i) => i !== idx)
+                      })} 
+                      style={{ position: 'absolute', top: 5, right: 5, background: 'rgba(255,0,0,0.8)', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
+                  </div>
+                ))}
+                
+                {/* Fotos Nuevas (Previews) */}
+                {(editingVehicle.new_file_previews || []).map((url, idx) => (
+                  <div key={`new-${idx}`} style={{ position: 'relative', width: '100px', height: '100px', borderRadius: '10px', overflow: 'hidden', border: '2px solid var(--primary)' }}>
+                    <img src={url} alt={`Nueva Foto ${idx+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <button 
+                      onClick={() => {
+                        const newFiles = [...(editingVehicle.new_files || [])]
+                        const newPreviews = [...(editingVehicle.new_file_previews || [])]
+                        newFiles.splice(idx, 1)
+                        newPreviews.splice(idx, 1)
+                        setEditingVehicle({ ...editingVehicle, new_files: newFiles, new_file_previews: newPreviews })
+                      }} 
+                      style={{ position: 'absolute', top: 5, right: 5, background: 'rgba(255,0,0,0.8)', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <input 
+                  type="file" 
+                  multiple 
+                  accept="image/*" 
+                  id="add-photos" 
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files)
+                    const previews = files.map(f => URL.createObjectURL(f))
+                    const currentFiles = editingVehicle.new_files || []
+                    const currentPreviews = editingVehicle.new_file_previews || []
+                    setEditingVehicle({
+                      ...editingVehicle,
+                      new_files: [...currentFiles, ...files],
+                      new_file_previews: [...currentPreviews, ...previews]
+                    })
+                  }}
+                />
+                <label htmlFor="add-photos" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', display: 'flex', gap: '8px', alignItems: 'center', color: 'white', fontSize: '0.9rem' }}>
+                  <ImageIcon size={18} /> AGREGAR FOTOS
+                </label>
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '16px' }}>
