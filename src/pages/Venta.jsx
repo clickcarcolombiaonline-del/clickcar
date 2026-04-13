@@ -142,6 +142,7 @@ const Venta = () => {
     name: '',
     phone: '',
     email: '',
+    year: '',
     make: '',
     model: '',
     mileage: '',
@@ -237,7 +238,7 @@ const Venta = () => {
           user_id: profile.id,
           make: formData.make,
           model: formData.model,
-          year: new Date().getFullYear(), // el usuario pondrá el año dentro de "modelo"
+          year: parseInt(formData.year) || new Date().getFullYear(),
           mileage: parseInt(formData.mileage) || 0,
           price: parseFloat(formData.price) || 0,
           fuel_type: formData.fuelType || 'Gasolina',
@@ -357,12 +358,21 @@ const Venta = () => {
                       </select>
                     </div>
                     <div className="filter-group">
-                      <label>MODELO Y AÑO *</label>
-                      <input type="text" name="model" required value={formData.model} onChange={handleChange} placeholder="Ej. Prado TXL 2024" />
+                      <label>MODELO *</label>
+                      <input type="text" name="model" required value={formData.model} onChange={handleChange} placeholder="Ej. Prado TXL" />
                     </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                    <div className="filter-group">
+                      <label>AÑO *</label>
+                      <select name="year" required value={formData.year} onChange={handleChange} className="brand-highlight-select">
+                        <option value="" style={{ color: '#000' }}>Seleccionar año</option>
+                        {Array.from({ length: 30 }, (_, i) => new Date().getFullYear() + 1 - i).map(year => (
+                          <option key={year} value={year} style={{ color: '#000' }}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="filter-group">
                       <label>KILOMETRAJE *</label>
                       <input type="text" name="mileage" required 
@@ -370,6 +380,9 @@ const Venta = () => {
                              onChange={handleMileageChange} 
                              placeholder="Ej. 25.000 km" />
                     </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                     <div className="filter-group">
                       <label>PRECIO DE VENTA (COP) *</label>
                       <input type="text" name="price" required 
@@ -377,9 +390,6 @@ const Venta = () => {
                              onChange={handlePriceChange} 
                              placeholder="Ej. $ 85.000.000" />
                     </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '40px' }}>
                     <div className="filter-group">
                       <label>COMBUSTIBLE *</label>
                       <select name="fuelType" value={formData.fuelType} onChange={handleChange} className="brand-highlight-select">
@@ -389,6 +399,9 @@ const Venta = () => {
                         <option value="Hibridos" style={{ color: '#000' }}>Híbrido</option>
                       </select>
                     </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '40px' }}>
                     <div className="filter-group">
                       <label>ESTADO *</label>
                       <select name="condition" value={formData.condition} onChange={handleChange} className="brand-highlight-select">
